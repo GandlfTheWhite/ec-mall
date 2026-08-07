@@ -1,4 +1,4 @@
-package com.zyd.gulimail.entity;
+package com.zyd.ecmall.entity;
 
 import java.time.LocalDateTime;
 

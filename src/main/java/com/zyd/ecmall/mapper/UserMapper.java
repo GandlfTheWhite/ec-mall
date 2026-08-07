@@ -1,7 +1,7 @@
-package com.zyd.gulimail.mapper;
+package com.zyd.ecmall.mapper;
 
 
-import com.zyd.gulimail.entity.User;
+import com.zyd.ecmall.entity.User;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;

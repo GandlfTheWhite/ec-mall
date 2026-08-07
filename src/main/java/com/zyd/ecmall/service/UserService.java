@@ -1,6 +1,6 @@
-package com.zyd.gulimail.service;
+package com.zyd.ecmall.service;
 
-import com.zyd.gulimail.entity.User;
+import com.zyd.ecmall.entity.User;
 import org.springframework.stereotype.Service;
 
 @Service
