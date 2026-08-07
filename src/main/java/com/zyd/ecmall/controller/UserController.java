@@ -1,13 +1,10 @@
-package com.zyd.gulimail.controller;
+package com.zyd.ecmall.controller;
 
-import com.zyd.gulimail.entity.User;
-import com.zyd.gulimail.service.UserService;
+import com.zyd.ecmall.entity.User;
+import com.zyd.ecmall.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 public class UserController {

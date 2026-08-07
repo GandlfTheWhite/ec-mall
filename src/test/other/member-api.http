@@ -1,0 +1,44 @@
+### 会員追加
+POST http://localhost:8888/api/members
+Content-Type: application/json
+
+{
+  "name": "鈴木一郎",
+  "email": "ichiro.suzuki@example.com",
+  "age": 30,
+  "password": "test1234"
+}
+
+### 会員削除
+DELETE http://localhost:8888/api/members/7
+
+### 会員一覧取得
+GET http://localhost:8888/api/members
+
+### 会員取得
+GET http://localhost:8888/api/members/1
+
+### 会員情報更新
+PUT http://localhost:8888/api/members/8
+Content-Type: application/json
+
+{
+  "name": "鈴木次郎",
+  "email": "jiro.suzuki@example.com",
+  "age": 31
+}
+
+### 会員ログイン
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ichiro.suzuki@example.com",
+  "password": "test1234"
+}
+
+### 查询当前登录会员
+GET http://localhost:8888/api/auth/me
+
+### 3. 退出登录
+POST http://localhost:8888/api/auth/logout

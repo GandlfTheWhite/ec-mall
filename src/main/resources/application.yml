@@ -1,20 +1,16 @@
 server:
   port: 8888
 
-#spring:
-#  datasource:
-#    url: jdbc:mysql://192.168.56.11:3306/gulimall-plus
-#    username: root
-#    password: root
 spring:
   datasource:
-    url: jdbc:mysql://192.168.56.11:3306/gulimall_demo?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo
+    url: jdbc:mysql://192.168.56.11:3306/ec_mall?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo
     username: root
-    password: 你的MySQL密码
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis:
   configuration:
+# database名をJava名に変更します。
     map-underscore-to-camel-case: true
 
 
