@@ -1,0 +1,9 @@
+### 会員ログイン・JWT生成
+
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ichiro.suzuki@example.com",
+  "password": "test1234"
+}
