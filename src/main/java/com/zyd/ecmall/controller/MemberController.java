@@ -3,6 +3,7 @@ package com.zyd.ecmall.controller;
 import com.zyd.ecmall.dto.MemberCreateRequest;
 import com.zyd.ecmall.entity.Member;
 import com.zyd.ecmall.service.MemberService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,7 +25,7 @@ public class MemberController {
     }
 
     @PostMapping
-    public Member create(@RequestBody MemberCreateRequest request) {
+    public Member create(@Valid @RequestBody MemberCreateRequest request) {
         return memberService.createMember(request);
     }
 

@@ -28,12 +28,12 @@ public class AuthController {
                 request.getEmail(),
                 request.getPassword()
         );
-        // ② 登録失敗かの判断
-        if (member == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .build();
-        }
+        // ② 登録失敗かの判断   失敗の場合serviceに異常を出していたのため、ここは不要になっております。
+//        if (member == null) {
+//            return ResponseEntity
+//                    .status(HttpStatus.UNAUTHORIZED)
+//                    .build();
+//        }
         // ③ 検証成功だけの場合、会員IDをSESSIONに保存します。
         session.setAttribute(
                 SessionConst.LOGIN_MEMBER_ID,

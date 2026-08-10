@@ -18,6 +18,10 @@ GET http://localhost:8888/api/members
 ### 会員取得
 GET http://localhost:8888/api/members/1
 
+
+### 存在しない会員取得
+GET http://localhost:8888/api/members/999999
+
 ### 会員情報更新
 PUT http://localhost:8888/api/members/8
 Content-Type: application/json
@@ -37,8 +41,68 @@ Content-Type: application/json
   "password": "test1234"
 }
 
-### 查询当前登录会员
+### 会員ログイン・パスワード不正
+
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ichiro.suzuki@example.com",
+  "password": "wrong-password"
+}
+
+### 会員ログイン・メールアドレス不正
+
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "not-exist@example.com",
+  "password": "test1234"
+}
+
+### 会員追加・メールアドレス重複
+
+POST http://localhost:8888/api/members
+Content-Type: application/json
+
+{
+  "name": "重複テスト",
+  "email": "ichiro.suzuki@example.com",
+  "age": 30,
+  "password": "test1234"
+}
+
+### 存在しない会員削除
+
+DELETE http://localhost:8888/api/members/999999
+
+### 存在しない会員更新
+
+PUT http://localhost:8888/api/members/999999
+Content-Type: application/json
+
+{
+  "name": "存在しない会員",
+  "email": "not-found@example.com",
+  "age": 30
+}
+
+###　現在ログインの会員情報
 GET http://localhost:8888/api/auth/me
 
-### 3. 退出登录
+### 3. ログアウト
 POST http://localhost:8888/api/auth/logout
+
+
+### 会員追加・パラメータチェック
+POST http://localhost:8888/api/members
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "abc",
+  "age": -1,
+  "password": "12"
+}
+

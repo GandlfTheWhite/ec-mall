@@ -1,6 +1,9 @@
 package com.zyd.ecmall.service;
 import com.zyd.ecmall.dto.MemberCreateRequest;
 import com.zyd.ecmall.entity.Member;
+import com.zyd.ecmall.exception.DuplicateEmailException;
+import com.zyd.ecmall.exception.LoginFailedException;
+import com.zyd.ecmall.exception.MemberNotFoundException;
 import com.zyd.ecmall.mapper.MemberMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,40 +25,52 @@ public class MemberService {
     }
     //追加機能
     public Member createMember(MemberCreateRequest request) {
+        Member existingMember =
+                memberMapper.selectByEmail(request.getEmail());
+
+        if (existingMember != null) {
+            throw new DuplicateEmailException(request.getEmail());
+        }
         Member member = new Member();
         member.setName(request.getName());
         member.setEmail(request.getEmail());
         member.setAge(request.getAge());
-
         String passwordHash =
                 passwordEncoder.encode(request.getPassword());
-
         member.setPasswordHash(passwordHash);
-
         memberMapper.insert(member);
-
         return memberMapper.selectById(member.getId());
     }
+
     //全体検索機能
     public List<Member> getAllMembers() {
         return memberMapper.selectAll();
     }
     //個別検索機能
     public Member getMemberById(Long id) {
-        return memberMapper.selectById(id);
+        Member member = memberMapper.selectById(id);
+        if (member == null) {
+            throw new MemberNotFoundException(id);
+        }
+        return member;
     }
     //削除機能
     public boolean deleteMember(Long id) {
+        Member member = memberMapper.selectById(id);
+        if (member == null) {
+            throw new MemberNotFoundException(id);
+        }
         return memberMapper.deleteById(id) > 0;
     }
     // 更新機能
     public Member updateMember(Long id, MemberUpdateRequest request) {
         Member member = memberMapper.selectById(id);
         if (member == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "会員が見つかりません。id=" + id
-            );
+            throw new MemberNotFoundException(id);
+//            throw new ResponseStatusException(
+//                    HttpStatus.NOT_FOUND,
+//                    "会員が見つかりません。id=" + id
+//            );
         }
         // 名前、メール、年齢入力ないと既存のものを使います
         if (request.getName() != null) {
@@ -89,7 +104,7 @@ public class MemberService {
                     member.getPasswordHash()
             );
             if (!matched) {
-                return null;
+                throw new LoginFailedException();
             }
             return member;
         }
