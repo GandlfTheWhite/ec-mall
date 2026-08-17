@@ -7,3 +7,20 @@ Content-Type: application/json
   "email": "ichiro.suzuki@example.com",
   "password": "test1234"
 }
+
+
+### JWTによるログイン会員取得
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTc4Njk1MzUyNiwiZXhwIjoxNzg2OTUzNTg2fQ.m-x9WD0FudmXUbRHN3V4GTsdo0tP2Q2ylddoi50utTA
+GET http://localhost:8888/api/auth/me
+Authorization: Bearer {{token}}
+
+### JWTなし
+GET http://localhost:8888/api/auth/me
+
+
+### 不正なJWT
+
+GET http://localhost:8888/api/auth/me
+Authorization: Bearer abc
+
+

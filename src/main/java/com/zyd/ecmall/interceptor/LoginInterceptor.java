@@ -1,4 +1,4 @@
-package com.zyd.ecmall.Interceptor;
+package com.zyd.ecmall.interceptor;
 
 import com.zyd.ecmall.constant.SessionConst;
 import jakarta.servlet.http.HttpServletRequest;
