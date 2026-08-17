@@ -19,11 +19,17 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
+
     @Override
     public boolean preHandle(
             HttpServletRequest request,
             HttpServletResponse response,
             Object handler) throws Exception {
+
+//        // 🆕 如果是 GET 请求，直接放行（所有人都能浏览商品）
+//         if ("GET".equalsIgnoreCase(request.getMethod())) {
+//                return true;
+//         }
 
         String authorizationHeader =
                 request.getHeader("Authorization");

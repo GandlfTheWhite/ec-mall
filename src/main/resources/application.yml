@@ -15,15 +15,15 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 jwt:
-#  JWT_SECRETはdefault設定値
+  #  JWT_SECRETはdefault設定値
   secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
-  expiration: 60000
+  expiration: 600000
 #  60秒 × 1000毫秒 = 6,000,0毫秒　＝　60秒
 
 
 mybatis:
   configuration:
-# database名をJava名に変更します。
+    # database名をJava名に変更します。
     map-underscore-to-camel-case: true
 
 #

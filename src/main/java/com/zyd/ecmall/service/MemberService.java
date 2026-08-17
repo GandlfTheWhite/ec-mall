@@ -97,7 +97,7 @@ public class MemberService {
 
             Member member = memberMapper.selectByEmail(email);
             if (member == null) {
-                return null;
+                throw new LoginFailedException();
             }
             boolean matched = passwordEncoder.matches(
                     password,

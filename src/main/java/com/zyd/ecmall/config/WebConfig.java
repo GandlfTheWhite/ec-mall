@@ -23,7 +23,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtAuthInterceptor)
                 .addPathPatterns(
                         "/api/members/**",
-                        "/api/auth/me"
+                        "/api/auth/me",
+                        "/api/products/**"
                 )
 //              新規追加の場合、JWT認証はいらない↓パスを分けます。
                 .excludePathPatterns(

@@ -1,0 +1,69 @@
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ichiro.suzuki@example.com",
+  "password": "test1234"
+}
+
+> {%
+    // 登录成功后，把返回的 token 保存到名为 "auth_token" 的全局变量里
+    client.global.set("auth_token", response.body.token);
+%}
+
+### 2. 获取当前登录会员信息（直接用上面自动保存的 Token）
+GET http://localhost:8888/api/auth/me
+Authorization: Bearer {{auth_token}}
+
+### 1. 公开查询所有商品（无需 Token）
+GET http://localhost:8888/api/products
+Authorization: Bearer {{auth_token}}
+
+### 2. 公开查询单个商品（无需 Token）
+GET http://localhost:8888/api/products/1
+Authorization: Bearer {{auth_token}}
+
+### 3. 新增商品（直接用上面自动保存的 Token）
+POST http://localhost:8888/api/products
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "name": "Apple iPhone 15 Pro",
+  "description": "A17 Pro 芯片，钛金属边框",
+  "price": 8999.00,
+  "stock": 50,
+  "category": "手机",
+  "imageUrl": "https://example.com/iphone.jpg"
+}
+
+### 4. 查询所有商品（不需要 Token，这里不写 Authorization）
+GET http://localhost:8888/api/products
+Authorization: Bearer {{auth_token}}
+
+### 5. 更新商品（用自动保存的 Token）
+PUT http://localhost:8888/api/products/1
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "price": 7999.00,
+  "stock": 30
+}
+
+### 6. 删除商品（用自动保存的 Token）
+DELETE http://localhost:8888/api/products/1
+Authorization: Bearer {{auth_token}}
+
+### 7. 商品検索（キーワードなし・全件1ページ目）
+GET http://localhost:8888/api/products/search?page=1&size=5
+Authorization: Bearer {{auth_token}}
+
+### 8. 商品検索（キーワードあり）
+GET http://localhost:8888/api/products/search?keyword=iPhone&page=1&size=5
+Authorization: Bearer {{auth_token}}
+
+### 9. 商品検索（カテゴリ＋価格帯）
+GET http://localhost:8888/api/products/search?category=手机&minPrice=5000&maxPrice=10000&page=1&size=10
+Authorization: Bearer {{auth_token}}
+

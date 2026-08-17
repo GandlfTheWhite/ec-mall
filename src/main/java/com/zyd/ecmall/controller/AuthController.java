@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 //    private static final String LOGIN_MEMBER_ID = "LOGIN_MEMBER_ID";
-
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
     public AuthController(
@@ -26,7 +25,10 @@ public class AuthController {
             JwtTokenProvider jwtTokenProvider) {
         this.memberService = memberService;
         this.jwtTokenProvider = jwtTokenProvider;
+
+        System.out.println("/api/auth");
     }
+
 //    @PostMapping("/login")
 //    public ResponseEntity<Member> login(
 //            @RequestBody LoginRequest request,
@@ -96,7 +98,7 @@ public class AuthController {
 
             Member member =
                     memberService.getMemberById(memberId);
-
+            System.out.println("me");
             return ResponseEntity.ok(member);
         }
 
