@@ -1,0 +1,114 @@
+package com.zyd.ecmall.service;
+
+import com.zyd.ecmall.dto.CartResponse;
+import com.zyd.ecmall.dto.OrderCreateRequest;
+import com.zyd.ecmall.entity.Order;
+import com.zyd.ecmall.entity.OrderItem;
+import com.zyd.ecmall.entity.Product;
+import com.zyd.ecmall.exception.ProductNotFoundException;
+import com.zyd.ecmall.mapper.OrderMapper;
+import com.zyd.ecmall.mapper.OrderItemMapper;
+import com.zyd.ecmall.mapper.ProductMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
+@Service
+public class OrderService {
+
+    private final CartService cartService;
+    private final OrderMapper orderMapper;
+    private final OrderItemMapper orderItemMapper;
+    private final ProductMapper productMapper;
+
+    public OrderService(CartService cartService, OrderMapper orderMapper,
+                        OrderItemMapper orderItemMapper, ProductMapper productMapper) {
+        this.cartService = cartService;
+        this.orderMapper = orderMapper;
+        this.orderItemMapper = orderItemMapper;
+        this.productMapper = productMapper;
+    }
+
+    /**
+     * 注文を作成する（全カート商品を対象） / 创建订单（下单全部购物车商品）
+     */
+    @Transactional(rollbackFor = Exception.class) // 任何异常都回滚
+    public Order createOrderFromCart(Long memberId, OrderCreateRequest request) {
+
+        // 1. 現在のカート情報を取得
+        CartResponse cart = cartService.getCart(memberId);
+        List<CartResponse.CartItemDetail> items = cart.getItems();
+
+        if (items.isEmpty()) {
+            throw new RuntimeException("カートが空です。注文できません。");
+        }
+
+        // 2. 在庫チェックと仮更新（ここで在庫をロックする）
+        for (CartResponse.CartItemDetail item : items) {
+            Product product = productMapper.selectById(item.getProductId());
+            if (product == null) {
+                throw new ProductNotFoundException(item.getProductId());
+            }
+            if (product.getStock() < item.getQuantity()) {
+                throw new RuntimeException(
+                        "商品「" + product.getName() + "」の在庫が不足しています。"
+                                + " (在庫:" + product.getStock() + ", 要求:" + item.getQuantity() + ")"
+                );
+            }
+            // **本当に超重要なポイント：ここで在庫を減らす！**
+            // UPDATE product SET stock = stock - #{quantity} WHERE id = #{id} AND stock >= #{quantity}
+            // このSQLは「在庫が足りない場合は0件更新（更新失敗）」になるので、安全です。
+            int updated = productMapper.deductStock(item.getProductId(), item.getQuantity());
+            if (updated == 0) {
+                // もし上記のif文をすり抜けてここに来たとしたら、他のスレッドが先に在庫を奪った証拠
+                throw new RuntimeException("在庫更新に失敗しました。再度お試しください。");
+            }
+        }
+
+        // 3. 注文番号を生成（例：ORD20260828123456）
+        String orderNo = generateOrderNo();
+
+        // 4. 注文主テーブルに挿入
+        Order order = new Order();
+        order.setOrderNo(orderNo);
+        order.setMemberId(memberId);
+        order.setTotalAmount(cart.getTotalPrice());
+        order.setStatus(0); // 0: 未払い
+        order.setShippingAddress(request.getShippingAddress());
+        order.setReceiverName(request.getReceiverName());
+        order.setReceiverPhone(request.getReceiverPhone());
+        order.setOrderDate(LocalDateTime.now());
+
+        orderMapper.insert(order); // ここで order.getId() が自動生成される
+
+        // 5. 注文明細を一括挿入（ループ）
+        for (CartResponse.CartItemDetail item : items) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrderId(order.getId());
+            orderItem.setProductId(item.getProductId());
+            orderItem.setProductName(item.getProductName()); // 商品名をスナップショット保存！
+            orderItem.setPrice(item.getPriceAtAdd());        // カート追加時の価格をそのまま使う
+            orderItem.setQuantity(item.getQuantity());
+            orderItemMapper.insert(orderItem);
+        }
+
+        // 6. 注文が完了したので、カートを空にする
+        cartService.clearCart(memberId);
+
+        // 7. 生成した注文を返す（フロントに表示させるため）
+        return order;
+    }
+
+    // 注文番号生成器（シンプル版）
+    private String generateOrderNo() {
+        LocalDateTime now = LocalDateTime.now();
+        String datePart = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
+        return "ORD" + datePart + randomNum;
+    }
+}

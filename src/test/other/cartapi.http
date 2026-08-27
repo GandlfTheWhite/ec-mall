@@ -1,0 +1,52 @@
+### 1. ログイン（トークン取得）
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ichiro.suzuki@example.com",
+  "password": "test1234"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+%}
+
+### 2. カート情報取得（空のはず）
+GET http://localhost:8888/api/cart
+Authorization: Bearer {{auth_token}}
+
+### 3. カートに商品追加（商品ID 1）
+POST http://localhost:8888/api/cart/items
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+### 3. カートに商品追加（商品ID 2）
+POST http://localhost:8888/api/cart/items
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+"productId": 2,
+"quantity": 1
+}
+
+### 4. カート情報再取得（追加されたか確認）
+GET http://localhost:8888/api/cart
+Authorization: Bearer {{auth_token}}
+
+### 5. 数量更新（商品ID 1 を 5個に）
+PUT http://localhost:8888/api/cart/items/1?quantity=5
+Authorization: Bearer {{auth_token}}
+
+### 6. カートから特定商品削除
+DELETE http://localhost:8888/api/cart/items/1
+Authorization: Bearer {{auth_token}}
+
+### 7. カートを空にする
+DELETE http://localhost:8888/api/cart
+Authorization: Bearer {{auth_token}}

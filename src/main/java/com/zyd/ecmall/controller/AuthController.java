@@ -26,7 +26,7 @@ public class AuthController {
         this.memberService = memberService;
         this.jwtTokenProvider = jwtTokenProvider;
 
-        System.out.println("/api/auth");
+//        System.out.println("/api/auth");
     }
 
 //    @PostMapping("/login")
@@ -98,7 +98,7 @@ public class AuthController {
 
             Member member =
                     memberService.getMemberById(memberId);
-            System.out.println("me");
+//            System.out.println("me");
             return ResponseEntity.ok(member);
         }
 

@@ -1,0 +1,43 @@
+### 1. ログイン（トークン取得）
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ichiro.suzuki@example.com",
+  "password": "test1234"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+%}
+
+### 2. カートに商品追加（商品ID 2）
+POST http://localhost:8888/api/cart/items
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "productId": 2,
+  "quantity": 1
+}
+
+### 3. カートに商品追加（商品ID 1）
+POST http://localhost:8888/api/cart/items
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 1
+}
+
+### 4.注文
+POST http://localhost:8888/api/orders
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "shippingAddress": "東京都新宿区...",
+  "receiverName": "山田太郎",
+  "receiverPhone": "090-1234-5678"
+}

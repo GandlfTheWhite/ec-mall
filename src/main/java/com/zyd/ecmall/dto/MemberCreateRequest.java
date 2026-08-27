@@ -4,17 +4,17 @@ import jakarta.validation.constraints.*;
 
 public class MemberCreateRequest {
 
-    @NotBlank(message = "名前をブラックに設定できない")
+    @NotBlank(message = "名前は必須です")
     private String name;
-    @NotBlank(message = "メールはブラックに設定できない")
-    @Email(message = "メール格式間違えた")
+    @NotBlank(message = "メールアドレスは必須です")
+    @Email(message = "メールアドレスの形式が正しくありません")
     private String email;
-    @Min(value = 0, message = "年齢０以下はだめです")
-    @Max(value = 150, message = "年齢は150を超えてはいけない")
+    @Min(value = 0, message = "年齢は0以上を入力してください")
+    @Max(value = 150, message = "年齢は150以下で入力してください")
     private Integer age;
-    @NotBlank(message = "パスワードをブラックに設定できない")
+    @NotBlank(message = "パスワードは必須です")
     @Size(min = 6, max = 20,
-            message = "パスワード長さは6から20以内必要")
+            message = "パスワードは6文字以上20文字以内で入力してください")
     private String password;
 
     public String getName() {

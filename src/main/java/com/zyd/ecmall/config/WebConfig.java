@@ -24,7 +24,9 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns(
                         "/api/members/**",
                         "/api/auth/me",
-                        "/api/products/**"
+                        "/api/products/**",
+                        "/api/cart/**",
+                        "/api/orders/**"
                 )
 //              新規追加の場合、JWT認証はいらない↓パスを分けます。
                 .excludePathPatterns(

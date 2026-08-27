@@ -5,17 +5,17 @@ import java.math.BigDecimal;
 
 public class ProductCreateRequest {
 
-    @NotBlank(message = "商品名称不能为空")
+    @NotBlank(message = "商品名は必須です")
     private String name;
 
     private String description;
 
-    @NotNull(message = "价格不能为空")
-    @DecimalMin(value = "0.01", message = "价格必须大于0")
+    @NotNull(message = "価格は必須です")
+    @DecimalMin(value = "0.01", message = "価格は0より大きい値を入力してください")
     private BigDecimal price;
 
-    @NotNull(message = "库存不能为空")
-    @Min(value = 0, message = "库存不能为负数")
+    @NotNull(message = "在庫数は必須です")
+    @Min(value = 0, message = "在庫数は0以上で入力してください")
     private Integer stock;
 
     private String category;

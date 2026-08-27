@@ -91,5 +91,18 @@ public interface ProductMapper {
         """)
     List<Product> searchProducts(@Param("request") ProductSearchRequest request,
                                  @Param("offset") int offset);
+
+
+    // ProductMapper.java
+    /**
+     * 在庫を減らす（楽観的ロック / 乐观锁防超卖）
+     * 更新件数が0なら在庫不足 or 同時更新競合
+     */
+    @Update("""
+        UPDATE ec_mall.products
+        SET stock = stock - #{quantity}
+        WHERE id = #{id} AND stock >= #{quantity}
+    """)
+    int deductStock(@Param("id") Long id, @Param("quantity") Integer quantity);
 }
 
