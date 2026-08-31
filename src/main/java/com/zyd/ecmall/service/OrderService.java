@@ -196,4 +196,20 @@ public class OrderService {
         return order;
     }
 
+        // OrderService.java に追記
+    public List<Order> getAllOrders() {
+        return orderMapper.selectAll();
+}
+
+    @Transactional
+    public Order updateStatus(Long id, Integer status) {
+        Order order = orderMapper.selectById(id);
+        if (order == null) {
+            throw new RuntimeException("注文が見つかりません。ID: " + id);
+        }
+        orderMapper.updateStatus(id, status);
+        return orderMapper.selectById(id);
+    }
+    
+
 }
