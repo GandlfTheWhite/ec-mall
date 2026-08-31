@@ -26,4 +26,18 @@ public class OrderController {
         Order order = orderService.createOrderFromCart(memberId, req);
         return ResponseEntity.ok(order);
     }
+
+    /**
+     * 支払い処理（モック） / 支付处理（模拟）
+     * POST /api/orders/{id}/pay
+     */
+    @PostMapping("/{id}/pay")
+    public ResponseEntity<Order> payOrder(
+            HttpServletRequest request,
+            @PathVariable Long id) {
+        Long memberId = (Long) request.getAttribute("memberId");
+        Order order = orderService.processPayment(id, memberId);
+        return ResponseEntity.ok(order);
+    }
+    
 }
