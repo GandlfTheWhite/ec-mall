@@ -39,5 +39,23 @@ public class OrderController {
         Order order = orderService.processPayment(id, memberId);
         return ResponseEntity.ok(order);
     }
+
+    /**
+     * 自分の注文一覧を取得 / 获取自己的订单列表
+     */
+    @GetMapping
+    public List<Order> getMyOrders(HttpServletRequest request) {
+        Long memberId = (Long) request.getAttribute("memberId");
+        return orderService.getOrdersByMember(memberId);
+    }
+    
+    /**
+     * 注文詳細を取得（明細付き） / 获取订单详情
+     */
+    @GetMapping("/{id}")
+    public Order getOrderDetail(HttpServletRequest request, @PathVariable Long id) {
+        Long memberId = (Long) request.getAttribute("memberId");
+        return orderService.getOrderDetail(id, memberId);
+    }
     
 }
