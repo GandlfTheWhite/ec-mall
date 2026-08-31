@@ -34,6 +34,34 @@ public class WebConfig implements WebMvcConfigurer {
                 );
     }
 
+    private final AdminAuthInterceptor adminAuthInterceptor;
+    
+    public WebConfig(
+            JwtAuthInterceptor jwtAuthInterceptor,
+            AdminAuthInterceptor adminAuthInterceptor) {
+        this.jwtAuthInterceptor = jwtAuthInterceptor;
+        this.adminAuthInterceptor = adminAuthInterceptor;
+    }
+    
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        // 既存のJWTインターセプター（ユーザー用）
+        registry.addInterceptor(jwtAuthInterceptor)
+                .addPathPatterns(
+                        "/api/members/**",
+                        "/api/auth/me",
+                        "/api/products/**",
+                        "/api/cart/**",
+                        "/api/orders/**"
+                )
+                .excludePathPatterns("/api/members");
+    
+        // 🆕 管理者用インターセプター
+        registry.addInterceptor(adminAuthInterceptor)
+                .addPathPatterns("/api/admin/**");
+    }
+    
+
 //    private final LoginInterceptor loginInterceptor;
 //    public WebConfig(
 //            LoginInterceptor loginInterceptor) {
