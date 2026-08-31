@@ -1,0 +1,40 @@
+### 1. 管理者ログイン
+POST http://localhost:8888/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+
+> {%
+    client.global.set("admin_token", response.body.token);
+%}
+
+### 2. 全会員一覧（管理者のみ）
+GET http://localhost:8888/api/admin/members
+Authorization: Bearer {{admin_token}}
+
+### 3. 会員のロール変更
+PUT http://localhost:8888/api/admin/members/2/role?role=ADMIN
+Authorization: Bearer {{admin_token}}
+
+### 4. 全注文一覧（管理者のみ）
+GET http://localhost:8888/api/admin/orders
+Authorization: Bearer {{admin_token}}
+
+### 5. 注文ステータス変更（発送）
+PUT http://localhost:8888/api/admin/orders/1/status?status=2
+Authorization: Bearer {{admin_token}}
+
+### 6. 商品の公開/非公開切替
+PUT http://localhost:8888/api/admin/products/1/status?status=0
+Authorization: Bearer {{admin_token}}
+
+### 7. 商品の在庫直接編集
+PUT http://localhost:8888/api/admin/products/1/stock?stock=100
+Authorization: Bearer {{admin_token}}
+
+### 8. 一般ユーザーで管理者APIを叩いてみる（403が返ることを確認）
+GET http://localhost:8888/api/admin/orders
+Authorization: Bearer {{auth_token}}  <!-- 一般ユーザーのトークン -->
