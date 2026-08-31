@@ -112,8 +112,6 @@ public class OrderService {
         return "ORD" + datePart + randomNum;
     }
 
-    // OrderService.java に追記
-
     /**
      * 支払い処理（モック） / 支付处理（模拟）
      * 注文ステータスを「支払済み」(1) に更新する
