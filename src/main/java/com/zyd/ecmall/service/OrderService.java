@@ -111,4 +111,40 @@ public class OrderService {
         int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
         return "ORD" + datePart + randomNum;
     }
+
+    // OrderService.java に追記
+
+    /**
+     * 支払い処理（モック） / 支付处理（模拟）
+     * 注文ステータスを「支払済み」(1) に更新する
+     */
+    @Transactional
+    public Order processPayment(Long orderId, Long memberId) {
+        // 1. 注文を取得
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new RuntimeException("注文が見つかりません。ID: " + orderId);
+        }
+    
+        // 2. 権限チェック：この注文は自分（memberId）のものか？
+        if (!order.getMemberId().equals(memberId)) {
+            throw new RuntimeException("この注文を操作する権限がありません。");
+        }
+    
+        // 3. 既に支払済み or キャンセル済みの場合はエラー
+        if (order.getStatus() == 1) {
+            throw new RuntimeException("この注文は既に支払済みです。");
+        }
+        if (order.getStatus() == 4) {
+            throw new RuntimeException("この注文はキャンセル済みです。");
+        }
+    
+        // 4. ステータスを「支払済み」(1) に更新
+        order.setStatus(1);
+        orderMapper.updateStatus(orderId, 1);
+    
+        // 5. 更新後の注文を返す
+        return order;
+    }
+
 }
