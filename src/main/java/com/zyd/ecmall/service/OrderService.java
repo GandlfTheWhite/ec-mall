@@ -171,5 +171,29 @@ public class OrderService {
     
         System.out.println("【定期タスク】" + timeoutOrders.size() + "件の注文をキャンセルし、在庫を戻しました。");
     }
+    
+    /**
+     * 会員の全注文を取得 / 获取会员的所有订单
+     */
+    public List<Order> getOrdersByMember(Long memberId) {
+        return orderMapper.selectByMemberId(memberId);
+    }
+    
+    /**
+     * 注文詳細を取得（明細付き） / 获取订单详情（含明细）
+     */
+    public Order getOrderDetail(Long orderId, Long memberId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new RuntimeException("注文が見つかりません。");
+        }
+        if (!order.getMemberId().equals(memberId)) {
+            throw new RuntimeException("権限がありません。");
+        }
+        // 明細をセット（別途 Order クラスに List<OrderItem> フィールドを追加推奨）
+        List<OrderItem> items = orderItemMapper.selectByOrderId(orderId);
+        order.setItems(items); // Order クラスに List<OrderItem> items を追加しておく必要あり
+        return order;
+    }
 
 }
