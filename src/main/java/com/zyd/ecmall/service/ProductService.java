@@ -78,7 +78,6 @@ public class ProductService {
         return productMapper.deleteById(id) > 0;
     }
 
-
     /**
      * 商品を条件検索＋ページングで取得する / 条件搜索+分页获取商品
      */
@@ -112,4 +111,27 @@ public class ProductService {
         // 6. 結果をラップして返却
         return new PageResult<>(content, (int) totalElements, request.getPage(), request.getSize());
     }
+
+    @Transactional
+    public Product updateStatus(Long id, Integer status) {
+        Product product = productMapper.selectById(id);
+        if (product == null) {
+            throw new RuntimeException("商品が見つかりません。ID: " + id);
+        }
+        product.setStatus(status);
+        productMapper.update(product);
+        return productMapper.selectById(id);
+    }
+    
+    @Transactional
+    public Product updateStock(Long id, Integer stock) {
+        Product product = productMapper.selectById(id);
+        if (product == null) {
+            throw new RuntimeException("商品が見つかりません。ID: " + id);
+        }
+        product.setStock(stock);
+        productMapper.update(product);
+        return productMapper.selectById(id);
+    }
+    
 }
