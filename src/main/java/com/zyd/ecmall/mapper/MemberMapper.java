@@ -53,6 +53,9 @@ public interface MemberMapper {
         """)
     int update(Member member);
 
+    @Update("UPDATE ec_mall.members SET role = #{role} WHERE id = #{id}")
+    int updateRole(@Param("id") Long id, @Param("role") String role);
+
 }
 
 
