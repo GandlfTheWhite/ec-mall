@@ -19,5 +19,13 @@ public interface OrderMapper {
      */
     @Update("UPDATE ec_mall.orders SET status = #{status} WHERE id = #{id}")
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    // OrderMapper.java に追記
+
+    /**
+     * 会員IDで全注文を取得（作成日降順） / 根据会员ID获取所有订单
+     */
+    @Select("SELECT * FROM ec_mall.orders WHERE member_id = #{memberId} ORDER BY created_at DESC")
+    List<Order> selectByMemberId(@Param("memberId") Long memberId);
     
 }
