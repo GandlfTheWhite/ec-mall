@@ -25,3 +25,13 @@ INSERT INTO ec_mall.products (name, description, price, stock, category, image_u
                                                                                                 ('Nintendo Switch OLED', '有機ELディスプレイ、TVモード・携帯モード対応', 3999.00, 100, 'ゲーム', 'https://example.com/switch.jpg', 1),
                                                                                                 ('PlayStation 5', 'Ultra HD Blu-ray、DualSenseコントローラー', 7999.00, 10, 'ゲーム', 'https://example.com/ps5.jpg', 1),
                                                                                                 ('Xbox Series X', '12 Teraflops、4K 120FPS', 7499.00, 8, 'ゲーム', 'https://example.com/xbox.jpg', 1);
+
+INSERT INTO ec_mall.members (name, email, age, password_hash, role)
+VALUES (
+    'システム管理者',
+    'admin@example.com',
+    30,
+    '$2a$10$...',  -- BCrypt ハッシュ化した「admin123」を入れる
+    'ADMIN'
+);
+
