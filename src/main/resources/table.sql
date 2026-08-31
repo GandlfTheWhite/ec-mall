@@ -61,3 +61,12 @@ CREATE TABLE IF NOT EXISTS ec_mall.order_item (
                                                   created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
                                                   FOREIGN KEY (order_id) REFERENCES ec_mall.orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='注文明細';
+
+-- members テーブルに role カラムを追加
+ALTER TABLE ec_mall.members
+ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT 'ロール（USER / ADMIN）';
+
+-- 既存の管理者アカウントを作成（例：admin@example.com / admin123）
+-- パスワードは後で BCrypt でハッシュ化して登録してください
+
+
