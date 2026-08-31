@@ -104,5 +104,12 @@ public interface ProductMapper {
         WHERE id = #{id} AND stock >= #{quantity}
     """)
     int deductStock(@Param("id") Long id, @Param("quantity") Integer quantity);
+
+    /**
+     * 在庫を増やす（キャンセル時に使用） / 增加库存（取消订单时使用）
+     */
+    @Update("UPDATE ec_mall.products SET stock = stock + #{quantity} WHERE id = #{id}")
+    int addStock(@Param("id") Long id, @Param("quantity") Integer quantity);
+        
 }
 
