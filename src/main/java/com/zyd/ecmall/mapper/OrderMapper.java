@@ -27,5 +27,9 @@ public interface OrderMapper {
      */
     @Select("SELECT * FROM ec_mall.orders WHERE member_id = #{memberId} ORDER BY created_at DESC")
     List<Order> selectByMemberId(@Param("memberId") Long memberId);
+
+    // OrderMapper.java に追記
+    @Select("SELECT * FROM ec_mall.orders ORDER BY created_at DESC")
+    List<Order> selectAll();
     
 }
