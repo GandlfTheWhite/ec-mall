@@ -13,4 +13,11 @@ public interface OrderMapper {
 
     @Select("SELECT * FROM ec_mall.orders WHERE id = #{id}")
     Order selectById(@Param("id") Long id);
+
+    /**
+     * 注文ステータスを更新する / 更新订单状态
+     */
+    @Update("UPDATE ec_mall.orders SET status = #{status} WHERE id = #{id}")
+    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+    
 }
