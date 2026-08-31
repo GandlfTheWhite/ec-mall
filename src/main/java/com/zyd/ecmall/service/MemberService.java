@@ -108,6 +108,18 @@ public class MemberService {
             }
             return member;
         }
+
+    @Transactional
+    public Member updateRole(Long id, String role) {
+        Member member = memberMapper.selectById(id);
+        if (member == null) {
+            throw new MemberNotFoundException(id);
+        }
+        member.setRole(role);
+        memberMapper.updateRole(id, role);
+        return memberMapper.selectById(id);
+    }
+        
 //    public Member login(String email, String password) {
 //
 //        Member member = memberMapper.selectByEmail(email);
