@@ -10,4 +10,8 @@ public interface OrderItemMapper {
             "VALUES (#{orderId}, #{productId}, #{productName}, #{price}, #{quantity})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(OrderItem orderItem);
+
+    @Select("SELECT * FROM ec_mall.order_item WHERE order_id = #{orderId}")
+    List<OrderItem> selectByOrderId(@Param("orderId") Long orderId);
+
 }
