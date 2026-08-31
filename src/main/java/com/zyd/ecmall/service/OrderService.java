@@ -145,4 +145,31 @@ public class OrderService {
         return order;
     }
 
+    /**
+     * タイムアウトした注文をキャンセルし、在庫を戻す / 取消超时订单并恢复库存
+     */
+    @Transactional
+    public void cancelTimeoutOrders() {
+        // 1. 15分前を閾値とする
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(15);
+    
+        // 2. 超えた未払い注文を取得
+        List<Order> timeoutOrders = orderMapper.selectTimeoutOrders(threshold);
+    
+        for (Order order : timeoutOrders) {
+            // 3. 注文ステータスを「キャンセル」(4) に更新
+            orderMapper.cancelOrder(order.getId());
+    
+            // 4. 注文明細を取得（在庫を戻すために必要）
+            List<OrderItem> items = orderItemMapper.selectByOrderId(order.getId());
+    
+            // 5. 各商品の在庫を戻す
+            for (OrderItem item : items) {
+                productMapper.addStock(item.getProductId(), item.getQuantity());
+            }
+        }
+    
+        System.out.println("【定期タスク】" + timeoutOrders.size() + "件の注文をキャンセルし、在庫を戻しました。");
+    }
+
 }
