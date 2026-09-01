@@ -6,10 +6,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling  
-public class GulimailPlusApplication {
+public class EcMallApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(GulimailPlusApplication.class, args);
+        SpringApplication.run(EcMallApplication.class, args);
         System.out.println("ECサイトを起動しました！！！");
+
     }
 }

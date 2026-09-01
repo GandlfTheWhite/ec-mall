@@ -28,10 +28,9 @@ INSERT INTO ec_mall.products (name, description, price, stock, category, image_u
 
 INSERT INTO ec_mall.members (name, email, age, password_hash, role)
 VALUES (
-    'システム管理者',
+    'admin123',
     'admin@example.com',
     30,
-    '$2a$10$...',  -- BCrypt ハッシュ化した「admin123」を入れる
+    '$2a$10$aAtfznii/sulSZVPll55yu6r4gwHFdXId7DGA903mer8MS1yChPaa',  -- BCrypt ハッシュ化した「admin123」を入れる
     'ADMIN'
 );
-

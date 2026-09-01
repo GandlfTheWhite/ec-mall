@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.zyd.ecmall.dto.MemberUpdateRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class MemberService {
         this.memberMapper = memberMapper;
         this.passwordEncoder = passwordEncoder;
     }
+
     //追加機能
     public Member createMember(MemberCreateRequest request) {
         Member existingMember =
@@ -106,6 +108,11 @@ public class MemberService {
             if (!matched) {
                 throw new LoginFailedException();
             }
+//            // 在测试类或启动时运行一次
+//            String encoded = passwordEncoder.encode("admin123");
+//            System.out.println("admin pwd↓");
+//            System.out.println(encoded);  // 复制输出的哈希值
+
             return member;
         }
 
@@ -119,7 +126,7 @@ public class MemberService {
         memberMapper.updateRole(id, role);
         return memberMapper.selectById(id);
     }
-        
+
 //    public Member login(String email, String password) {
 //
 //        Member member = memberMapper.selectByEmail(email);

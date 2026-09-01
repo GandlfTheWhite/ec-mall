@@ -10,7 +10,11 @@ public class Member {
     private LocalDateTime createdAt;
     @JsonIgnore
     private String passwordHash;
+    private String role;  // "USER" または "ADMIN"
 
+    // Getter/Setter も追加
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
     public Long getId() {
         return id;

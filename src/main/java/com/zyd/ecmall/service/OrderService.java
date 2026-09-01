@@ -196,7 +196,6 @@ public class OrderService {
         return order;
     }
 
-        // OrderService.java に追記
     public List<Order> getAllOrders() {
         return orderMapper.selectAll();
 }

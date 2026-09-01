@@ -9,14 +9,14 @@ import java.util.List;
 public interface MemberMapper {
 
     @Select("""
-        SELECT id, name, email, age, created_at
+        SELECT id, name, email, age, created_at, role
         FROM ec_mall.members
         ORDER BY id
         """)
     List<Member> selectAll();
 
     @Select("""
-        SELECT id, name, email, age, created_at
+        SELECT id, name, email, age, created_at, role
         FROM ec_mall.members
         WHERE id = #{id}
         """)
@@ -24,7 +24,7 @@ public interface MemberMapper {
     Member selectById(@Param("id") Long id);
 
     @Select("""
-    SELECT id, name, email, age, created_at, password_hash
+    SELECT id, name, email, age, created_at, password_hash, role
     FROM ec_mall.members
     WHERE email = #{email}
     """)

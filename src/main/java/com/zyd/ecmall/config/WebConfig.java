@@ -1,51 +1,26 @@
 package com.zyd.ecmall.config;
 
+import com.zyd.ecmall.interceptor.AdminAuthInterceptor;
 import com.zyd.ecmall.interceptor.JwtAuthInterceptor;
-import com.zyd.ecmall.interceptor.LoginInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+//@Configuration(proxyBeanMethods = false)  // 🆕 ここを追加
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     private final JwtAuthInterceptor jwtAuthInterceptor;
-    public WebConfig(
-            JwtAuthInterceptor jwtAuthInterceptor) {
-
-        this.jwtAuthInterceptor = jwtAuthInterceptor;
-    }
-
-    @Override
-    public void addInterceptors(
-            InterceptorRegistry registry) {
-
-        registry.addInterceptor(jwtAuthInterceptor)
-                .addPathPatterns(
-                        "/api/members/**",
-                        "/api/auth/me",
-                        "/api/products/**",
-                        "/api/cart/**",
-                        "/api/orders/**"
-                )
-//              新規追加の場合、JWT認証はいらない↓パスを分けます。
-                .excludePathPatterns(
-                        "/api/members"
-                );
-    }
-
     private final AdminAuthInterceptor adminAuthInterceptor;
-    
-    public WebConfig(
-            JwtAuthInterceptor jwtAuthInterceptor,
-            AdminAuthInterceptor adminAuthInterceptor) {
+
+    public WebConfig(JwtAuthInterceptor jwtAuthInterceptor, AdminAuthInterceptor adminAuthInterceptor) {
         this.jwtAuthInterceptor = jwtAuthInterceptor;
         this.adminAuthInterceptor = adminAuthInterceptor;
     }
-    
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 既存のJWTインターセプター（ユーザー用）
+        // ユーザー用 JWT インターセプター
         registry.addInterceptor(jwtAuthInterceptor)
                 .addPathPatterns(
                         "/api/members/**",
@@ -55,25 +30,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/orders/**"
                 )
                 .excludePathPatterns("/api/members");
-    
-        // 🆕 管理者用インターセプター
+
+        // 管理者用インターセプター
         registry.addInterceptor(adminAuthInterceptor)
                 .addPathPatterns("/api/admin/**");
     }
-    
-
-//    private final LoginInterceptor loginInterceptor;
-//    public WebConfig(
-//            LoginInterceptor loginInterceptor) {
-//        this.loginInterceptor = loginInterceptor;
-//    }
-//    @Override
-//    public void addInterceptors(
-//            InterceptorRegistry registry) {
-//
-//        registry.addInterceptor(loginInterceptor)
-//                .addPathPatterns("/api/members/**");
-//    }
-
-
 }

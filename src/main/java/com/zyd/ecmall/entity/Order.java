@@ -2,6 +2,7 @@ package com.zyd.ecmall.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 注文エンティティ / 订单实体
@@ -18,6 +19,11 @@ public class Order {
     private String receiverPhone;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private List<OrderItem> items;
+    // Getter/Setter
+    public List<OrderItem> getItems() { return items; }
+    public void setItems(List<OrderItem> items) { this.items = items; }
 
     // 全Getter/Setter（省略、生成してください）
     public Long getId() { return id; }

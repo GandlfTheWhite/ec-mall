@@ -38,6 +38,15 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
 
             // 3. 会員情報を取得してロールをチェック
             Member member = memberService.getMemberById(memberId);
+
+//            // ===== 🆕 ここにデバッグログを追加（角色检查前） =====
+//            System.out.println("===== 管理者チェックデバッグ =====");
+//            System.out.println("memberId: " + memberId);
+//            System.out.println("role の値: [" + member.getRole() + "]");
+//            System.out.println("role の長さ: " + (member.getRole() == null ? "null" : member.getRole().length()));
+//            System.out.println("'ADMIN' と一致するか: " + "ADMIN".equals(member.getRole()));
+//            System.out.println("=================================");
+
             if (!"ADMIN".equals(member.getRole())) {
                 writeErrorResponse(response, "管理者権限がありません");
                 return false;
@@ -51,6 +60,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             writeErrorResponse(response, "無効なトークンです");
             return false;
         }
+
     }
 
     private void writeErrorResponse(HttpServletResponse response, String message) throws Exception {

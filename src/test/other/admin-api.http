@@ -24,7 +24,7 @@ GET http://localhost:8888/api/admin/orders
 Authorization: Bearer {{admin_token}}
 
 ### 5. 注文ステータス変更（発送）
-PUT http://localhost:8888/api/admin/orders/1/status?status=2
+PUT http://localhost:8888/api/admin/orders/3/status?status=0
 Authorization: Bearer {{admin_token}}
 
 ### 6. 商品の公開/非公開切替
@@ -35,6 +35,8 @@ Authorization: Bearer {{admin_token}}
 PUT http://localhost:8888/api/admin/products/1/stock?stock=100
 Authorization: Bearer {{admin_token}}
 
+
+
 ### 8. 一般ユーザーで管理者APIを叩いてみる（403が返ることを確認）
 GET http://localhost:8888/api/admin/orders
-Authorization: Bearer {{auth_token}}  <!-- 一般ユーザーのトークン -->
+Authorization: Bearer {{auth_token}}

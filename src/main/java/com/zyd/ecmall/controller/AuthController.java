@@ -1,6 +1,5 @@
 package com.zyd.ecmall.controller;
 
-import com.zyd.ecmall.constant.SessionConst;
 import com.zyd.ecmall.dto.LoginRequest;
 import com.zyd.ecmall.dto.LoginResponse;
 import com.zyd.ecmall.entity.Member;
@@ -10,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 

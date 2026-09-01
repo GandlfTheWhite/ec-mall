@@ -9,6 +9,8 @@ import com.zyd.ecmall.exception.MemberNotFoundException; // 可以新建 Product
 import com.zyd.ecmall.exception.ProductNotFoundException;
 import com.zyd.ecmall.mapper.ProductMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service

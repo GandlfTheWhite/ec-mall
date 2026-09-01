@@ -3,6 +3,8 @@ package com.zyd.ecmall.mapper;
 import com.zyd.ecmall.entity.OrderItem;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
+
 @Mapper
 public interface OrderItemMapper {
 
