@@ -1,5 +1,5 @@
 server:
-  port: 8888
+  port: ${PORT:5000}
   servlet:
     session:
       timeout: 30m
@@ -7,17 +7,23 @@ server:
         http-only: true
         same-site: lax
 
+#spring:
+#  datasource:
+#    url: jdbc:mysql://192.168.56.11:3306/ec_mall?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo
+#    username: admin
+#    password: root
+#    driver-class-name: com.mysql.cj.jdbc.Driver
 spring:
   datasource:
-    url: jdbc:mysql://192.168.56.11:3306/ec_mall?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${RDS_HOSTNAME:localhost}:${RDS_PORT:3306}/${RDS_DB_NAME:ec-mall}?useSSL=false&serverTimezone=Asia/Tokyo&characterEncoding=utf8
+    username: ${RDS_USERNAME:admin}
+    password: ${RDS_PASSWORD:~]5-hWICtx#22~nwiXq9FM#D?Ukt}
 
 jwt:
   #  JWT_SECRETはdefault設定値
   secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
-  expiration: 600000
+  expiration: 86400000
+#  86400000 は一日
 #  60秒 × 1000毫秒 = 6,000,0毫秒　＝　60秒
 
 

@@ -12,7 +12,7 @@ public class CartResponse {
     private List<CartItemDetail> items;
     private BigDecimal totalPrice; // 合計金額
 
-    // Getter/Setter
+
     public Long getCartId() { return cartId; }
     public void setCartId(Long cartId) { this.cartId = cartId; }
     public List<CartItemDetail> getItems() { return items; }
@@ -31,7 +31,6 @@ public class CartResponse {
         private BigDecimal priceAtAdd; // カート追加時の価格
         private BigDecimal currentPrice; // 現在の最新価格（参考値）
 
-        // Getter/Setter（省略）
         public Long getProductId() { return productId; }
         public void setProductId(Long productId) { this.productId = productId; }
         public String getProductName() { return productName; }

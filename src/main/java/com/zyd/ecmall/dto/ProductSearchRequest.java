@@ -12,7 +12,6 @@ public class ProductSearchRequest {
     private Integer page = 1;     // ページ番号（デフォルト1） / 页码（默认1）
     private Integer size = 10;    // 1ページの件数（デフォルト10） / 每页条数（默认10）
 
-    // Getter / Setter
     public String getKeyword() { return keyword; }
     public void setKeyword(String keyword) { this.keyword = keyword; }
     public String getCategory() { return category; }

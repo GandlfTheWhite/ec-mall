@@ -1,4 +1,4 @@
-import com.zyd.ecmall.service.OrderService;
+package com.zyd.ecmall.service;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

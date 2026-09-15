@@ -16,7 +16,6 @@ public class OrderCreateRequest {
     @NotBlank(message = "受取人電話番号は必須です")
     private String receiverPhone;
 
-    // Getter/Setter
     public String getShippingAddress() { return shippingAddress; }
     public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
     public String getReceiverName() { return receiverName; }

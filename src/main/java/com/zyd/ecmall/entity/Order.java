@@ -21,11 +21,9 @@ public class Order {
     private LocalDateTime updatedAt;
 
     private List<OrderItem> items;
-    // Getter/Setter
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }
 
-    // 全Getter/Setter（省略、生成してください）
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getOrderNo() { return orderNo; }

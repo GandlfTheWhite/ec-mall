@@ -12,7 +12,6 @@ public class Member {
     private String passwordHash;
     private String role;  // "USER" または "ADMIN"
 
-    // Getter/Setter も追加
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 

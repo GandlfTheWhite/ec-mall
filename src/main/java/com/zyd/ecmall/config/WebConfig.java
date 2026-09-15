@@ -18,6 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
         this.adminAuthInterceptor = adminAuthInterceptor;
     }
 
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // ユーザー用 JWT インターセプター

@@ -69,10 +69,6 @@ public class MemberService {
         Member member = memberMapper.selectById(id);
         if (member == null) {
             throw new MemberNotFoundException(id);
-//            throw new ResponseStatusException(
-//                    HttpStatus.NOT_FOUND,
-//                    "会員が見つかりません。id=" + id
-//            );
         }
         // 名前、メール、年齢入力ないと既存のものを使います
         if (request.getName() != null) {
@@ -112,7 +108,6 @@ public class MemberService {
 //            String encoded = passwordEncoder.encode("admin123");
 //            System.out.println("admin pwd↓");
 //            System.out.println(encoded);  // 复制输出的哈希值
-
             return member;
         }
 
@@ -126,32 +121,5 @@ public class MemberService {
         memberMapper.updateRole(id, role);
         return memberMapper.selectById(id);
     }
-
-//    public Member login(String email, String password) {
-//
-//        Member member = memberMapper.selectByEmail(email);
-//
-//        System.out.println("收到的邮箱 = [" + email + "]");
-//        System.out.println("是否查到会员 = " + (member != null));
-//
-//        if (member == null) {
-//            return null;
-//        }
-//
-//        boolean passwordMatched = passwordEncoder.matches(
-//                password,
-//                member.getPasswordHash()
-//        );
-//
-//        System.out.println("密码是否一致 = " + passwordMatched);
-//
-//        if (!passwordMatched) {
-//            return null;
-//        }
-//
-//        return member;
-//    }
-
-
 
 }

@@ -11,7 +11,6 @@ public class Cart {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Getter / Setter（省略しますが、実際は全フィールドに生成してください）
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getMemberId() { return memberId; }

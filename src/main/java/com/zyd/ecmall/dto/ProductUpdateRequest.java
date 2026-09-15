@@ -11,7 +11,6 @@ public class ProductUpdateRequest {
     private String imageUrl;
     private Integer status; // 允许上下架
 
-    // Getter/Setter...
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }

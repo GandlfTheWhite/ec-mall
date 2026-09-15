@@ -15,7 +15,6 @@ public class Product {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // ⬇️ 生成所有 Getter 和 Setter（用 IDE 快捷键，或者 Lombok 但你没装，手动写吧）
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }

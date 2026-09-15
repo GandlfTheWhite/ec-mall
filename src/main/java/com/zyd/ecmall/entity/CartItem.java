@@ -15,7 +15,6 @@ public class CartItem {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Getter / Setter（全フィールド分生成）
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getCartId() { return cartId; }

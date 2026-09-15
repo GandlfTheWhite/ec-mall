@@ -20,7 +20,6 @@ public interface MemberMapper {
         FROM ec_mall.members
         WHERE id = #{id}
         """)
-//    Member selectById(Long id);
     Member selectById(@Param("id") Long id);
 
     @Select("""
