@@ -1,0 +1,27 @@
+{
+  "name": "ec-mall-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && aws s3 sync ./dist s3://ec-mall-frontend-zyd --delete --exclude \"index.html\" && aws s3 cp ./dist/index.html s3://ec-mall-frontend-zyd/index.html --content-type \"text/html\" --cache-control \"public, max-age=0, must-revalidate\" && aws cloudfront create-invalidation --distribution-id ET1N0PVMBYDUC --paths \"/*\""
+  },
+  "dependencies": {
+    "axios": "^1.20.0",
+    "element-plus": "^2.14.5",
+    "pinia": "^4.0.3",
+    "vue": "^3.5.40",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "vite": "^8.1.5",
+    "vite-plugin-vue-devtools": "^8.1.5"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  }
+}
