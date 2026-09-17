@@ -1,7 +1,4 @@
-import axios from './axios'  // 前回作成した axios インスタンス
+import api from './axios'
 
-export const getProducts = (params) => {
-  return axios.get('/products/search', { params })
-}
-
-export const getProductById = (id) => axios.get(`/products/${id}`)
+export const getProducts = (params) => api.get('/products/search', { params })
+export const getProductById = (id) => api.get(`/products/${id}`)

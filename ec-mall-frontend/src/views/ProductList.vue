@@ -1,76 +1,9 @@
-<template>
-  <div class="product-list">
-    <el-input v-model="keyword" placeholder="商品を検索" @input="handleSearch" />
-    <el-row :gutter="20">
-      <el-col v-for="p in products" :key="p.id" :span="6">
-        <el-card class="product-card" shadow="hover" @click="goToDetail(p.id)">
-          <img :src="p.imageUrl" class="product-image" />
-          <h3>{{ p.name }}</h3>
-          <p>¥{{ p.price }}</p>
-          <el-button type="primary" @click="addToCart(p.id)">カートに入れる</el-button>
-        </el-card>
-      </el-col>
-    </el-row>
-    <el-pagination
-      v-model:current-page="page"
-      v-model:page-size="size"
-      :total="total"
-      @current-change="fetchProducts"
-    />
-  </div>
-</template>
-
+<template><main class="page-wrap"><div class="toolbar"><el-input v-model="keyword" clearable placeholder="商品を検索" @keyup.enter="search" @clear="search" /><el-button type="primary" @click="search">検索</el-button></div><el-row v-loading="loading" :gutter="20"><el-col v-for="p in products" :key="p.id" :xs="24" :sm="12" :md="8" :lg="6"><el-card class="card" shadow="hover" @click="router.push(`/products/${p.id}`)"><el-image :src="p.imageUrl" class="image" fit="cover"><template #error><div class="no-image">画像はありません</div></template></el-image><h3>{{ p.name }}</h3><p class="price">¥{{ price(p.price) }}</p><el-button type="primary" :loading="adding === p.id" @click.stop="add(p.id)">カートに入れる</el-button></el-card></el-col></el-row><el-empty v-if="!loading && !products.length" description="商品が見つかりません" /><el-pagination v-if="total" v-model:current-page="page" :page-size="size" :total="total" layout="prev, pager, next" class="pager" @current-change="fetch" /></main></template>
 <script setup>
-import { ref, onMounted } from 'vue'
-import { getProducts } from '@/api/product'
-import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-
-const products = ref([])
-const total = ref(0)
-const page = ref(1)
-const size = ref(import.meta.env.VITE_PAGE_SIZE || 10)
-const keyword = ref('')
-
-const fetchProducts = async () => {
-  try {
-    const res = await getProducts({ keyword: keyword.value, page: page.value, size: size.value })
-    console.log('API レスポンス全体:', res)
-    console.log('res.data の型:', Array.isArray(res.data) ? '配列' : 'オブジェクト')
-    console.log('res.data の中身:', res.data)
-    // レスポンス形式に応じて商品一覧を設定する
-    if (Array.isArray(res.data)) {
-      products.value = res.data
-    } else if (res.data.content) {
-      products.value = res.data.content
-      total.value = res.data.totalElements
-    }
-  } catch (err) {
-    ElMessage.error('商品一覧の取得に失敗しました')
-  }
-}
-
-const handleSearch = () => {
-  page.value = 1   // 検索時は1ページ目に戻す
-  fetchProducts()
-}
-
-const addToCart = (productId) => {
-  // 後で実装
-  ElMessage.info('カートに追加（未実装）')
-}
-
-const goToDetail = (productId) => {
-  router.push(`/products/${productId}`)
-}
-
-onMounted(fetchProducts)
+import { onMounted, ref } from 'vue'; import { ElMessage } from 'element-plus'; import { useRouter } from 'vue-router'; import { getProducts } from '@/api/product'; import { addToCart } from '@/api/cart'
+const router = useRouter(), products = ref([]), keyword = ref(''), page = ref(1), size = 10, total = ref(0), loading = ref(false), adding = ref(null)
+const price = (v) => Number(v).toFixed(2)
+const fetch = async () => { loading.value = true; try { const { data } = await getProducts({ keyword: keyword.value, page: page.value, size }); products.value = data.content || []; total.value = data.totalElements || 0 } catch (e) { ElMessage.error(e.response?.data?.message || '商品一覧の取得に失敗しました') } finally { loading.value = false } }
+const search = () => { page.value = 1; fetch() }; const add = async (id) => { adding.value = id; try { await addToCart(id, 1); ElMessage.success('カートに追加しました') } catch (e) { ElMessage.error(e.response?.data?.message || 'カートへの追加に失敗しました') } finally { adding.value = null } }; onMounted(fetch)
 </script>
-
-<style scoped>
-.product-list { padding: 20px; }
-.product-card { margin-bottom: 20px; cursor: pointer; }
-.product-image { width: 100%; height: 150px; object-fit: cover; }
-</style>
+<style scoped>.page-wrap{max-width:1200px;margin:auto;padding:24px}.toolbar{display:flex;gap:12px;margin-bottom:20px}.card{height:100%;cursor:pointer}.image{width:100%;height:180px;background:#f4f4f5}.no-image{height:100%;display:grid;place-items:center;color:#909399}.price{color:#f56c6c;font-weight:700;font-size:18px}.pager{justify-content:center;margin-top:24px}</style>
