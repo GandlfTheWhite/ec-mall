@@ -52,8 +52,8 @@ public class ProductController {
     }
 
     /**
-     * 商品を検索する（ページング対応、ログイン不要） / 搜索商品（支持分页，无需登录）
-     * 例: GET /api/products/search?keyword=iPhone&category=手机&page=1&size=5
+     * 商品を検索する（ページング対応、ログインが必要）
+     * 例: GET /api/products/search?keyword=iPhone&category=スマートフォン&page=1&size=5
      */
     @GetMapping("/search")
     public PageResult<Product> searchProducts(ProductSearchRequest request) {

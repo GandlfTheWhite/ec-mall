@@ -75,6 +75,10 @@ public class MemberService {
             member.setName(request.getName());
         }
         if (request.getEmail() != null) {
+            Member existing = memberMapper.selectByEmail(request.getEmail());
+            if (existing != null && !existing.getId().equals(id)) {
+                throw new DuplicateEmailException(request.getEmail());
+            }
             member.setEmail(request.getEmail());
         }
         if (request.getAge() != null) {

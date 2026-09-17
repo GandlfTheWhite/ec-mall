@@ -1,39 +1,84 @@
-name: Deploy Backend to Elastic Beanstalk
+name: Verify and Deploy Backend
 
 on:
   push:
-    branches:
-      - master
+    branches: [dev, master]
     paths:
-      - 'ec-mall/**'  # 只有后端代码变化时才触发，请根据你的实际目录修改
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/deploy-backend.yml'
+      - '.github/scripts/**'
+  pull_request:
+    branches: [dev, master]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/deploy-backend.yml'
+      - '.github/scripts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  verify:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'corretto'
           cache: 'maven'
+      - name: Test deployment configuration checks
+        run: python3 -B -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Test and package without a live database
+        run: mvn --batch-mode verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: target/ec-mall-1.0-SNAPSHOT.jar
+          if-no-files-found: error
 
-      - name: Build with Maven
-        run: mvn clean package -DskipTests
-        working-directory: ./ec-mall
-
+  deploy:
+    needs: verify
+    # 本番設定の確認が完了するまでは、master に push しても配信しない。
+    if: >-
+      github.ref == 'refs/heads/master' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+          path: target
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Deploy to Elastic Beanstalk
+      - name: Check EB database settings before deployment
+        shell: bash
+        env:
+          EB_APPLICATION_NAME: ${{ secrets.EB_APPLICATION_NAME }}
+          EB_ENVIRONMENT_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
+        run: |
+          set -euo pipefail
+          # 認証情報をログやファイルに出力せず、検証プロセスへ直接渡す。
+          aws elasticbeanstalk describe-configuration-settings \
+            --application-name "$EB_APPLICATION_NAME" \
+            --environment-name "$EB_ENVIRONMENT_NAME" \
+            --query 'ConfigurationSettings[0].OptionSettings' \
+            --output json | python3 .github/scripts/check_eb_environment.py
+      - name: Deploy verified artifact to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -42,4 +87,4 @@ jobs:
           environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
           region: ${{ secrets.AWS_REGION }}
           version_label: "v-${{ github.sha }}"
-          deployment_package: ec-mall/target/ec-mall-1.0-SNAPSHOT.jar
+          deployment_package: target/ec-mall-1.0-SNAPSHOT.jar

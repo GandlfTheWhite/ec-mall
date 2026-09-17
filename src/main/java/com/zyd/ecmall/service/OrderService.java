@@ -11,6 +11,8 @@ import com.zyd.ecmall.mapper.OrderItemMapper;
 import com.zyd.ecmall.mapper.ProductMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -45,7 +47,7 @@ public class OrderService {
         List<CartResponse.CartItemDetail> items = cart.getItems();
 
         if (items.isEmpty()) {
-            throw new RuntimeException("カートが空です。注文できません。");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "カートが空です。注文できません。");
         }
 
         // 2. 在庫チェックと仮更新（ここで在庫をロックする）
@@ -54,8 +56,11 @@ public class OrderService {
             if (product == null) {
                 throw new ProductNotFoundException(item.getProductId());
             }
+            if (!Integer.valueOf(1).equals(product.getStatus()) || item.getQuantity() < 1) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "販売状況または数量をご確認ください。");
+            }
             if (product.getStock() < item.getQuantity()) {
-                throw new RuntimeException(
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "商品「" + product.getName() + "」の在庫が不足しています。"
                                 + " (在庫:" + product.getStock() + ", 要求:" + item.getQuantity() + ")"
                 );
@@ -66,7 +71,7 @@ public class OrderService {
             int updated = productMapper.deductStock(item.getProductId(), item.getQuantity());
             if (updated == 0) {
                 // もし上記のif文をすり抜けてここに来たとしたら、他のスレッドが先に在庫を奪った証拠
-                throw new RuntimeException("在庫更新に失敗しました。再度お試しください。");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "在庫更新に失敗しました。再度お試しください。");
             }
         }
 
@@ -119,22 +124,19 @@ public class OrderService {
     @Transactional
     public Order processPayment(Long orderId, Long memberId) {
         // 1. 注文を取得
-        Order order = orderMapper.selectById(orderId);
+        Order order = orderMapper.selectByIdForUpdate(orderId);
         if (order == null) {
-            throw new RuntimeException("注文が見つかりません。ID: " + orderId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "注文が見つかりません。");
         }
     
         // 2. 権限チェック：この注文は自分（memberId）のものか？
         if (!order.getMemberId().equals(memberId)) {
-            throw new RuntimeException("この注文を操作する権限がありません。");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "この注文を操作する権限がありません。");
         }
     
         // 3. 既に支払済み or キャンセル済みの場合はエラー
-        if (order.getStatus() == 1) {
-            throw new RuntimeException("この注文は既に支払済みです。");
-        }
-        if (order.getStatus() == 4) {
-            throw new RuntimeException("この注文はキャンセル済みです。");
+        if (order.getStatus() != 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "この注文は既に処理されています。");
         }
     
         // 4. ステータスを「支払済み」(1) に更新
@@ -156,7 +158,9 @@ public class OrderService {
         // 2. 超えた未払い注文を取得
         List<Order> timeoutOrders = orderMapper.selectTimeoutOrders(threshold);
     
-        for (Order order : timeoutOrders) {
+        for (Order candidate : timeoutOrders) {
+            Order order = orderMapper.selectByIdForUpdate(candidate.getId());
+            if (order == null || order.getStatus() != 0) continue;
             // 3. 注文ステータスを「キャンセル」(4) に更新
             orderMapper.cancelOrder(order.getId());
     
@@ -185,10 +189,10 @@ public class OrderService {
     public Order getOrderDetail(Long orderId, Long memberId) {
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
-            throw new RuntimeException("注文が見つかりません。");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "注文が見つかりません。");
         }
         if (!order.getMemberId().equals(memberId)) {
-            throw new RuntimeException("権限がありません。");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "権限がありません。");
         }
         // 明細をセット（別途 Order クラスに List<OrderItem> フィールドを追加推奨）
         List<OrderItem> items = orderItemMapper.selectByOrderId(orderId);
@@ -202,11 +206,27 @@ public class OrderService {
 
     @Transactional
     public Order updateStatus(Long id, Integer status) {
-        Order order = orderMapper.selectById(id);
+        Order order = orderMapper.selectByIdForUpdate(id);
         if (order == null) {
-            throw new RuntimeException("注文が見つかりません。ID: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "注文が見つかりません。");
         }
+        if (status == null || status < 0 || status > 4) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "注文状況が正しくありません。");
+        }
+        if (order.getStatus().equals(status)) return order;
+        boolean allowed = switch (order.getStatus()) {
+            case 0 -> status == 1 || status == 4;
+            case 1 -> status == 2 || status == 4;
+            case 2 -> status == 3;
+            default -> false;
+        };
+        if (!allowed) throw new ResponseStatusException(HttpStatus.CONFLICT, "この注文状況には変更できません。");
         orderMapper.updateStatus(id, status);
+        if (status == 4) {
+            for (OrderItem item : orderItemMapper.selectByOrderId(id)) {
+                productMapper.addStock(item.getProductId(), item.getQuantity());
+            }
+        }
         return orderMapper.selectById(id);
     }
 }

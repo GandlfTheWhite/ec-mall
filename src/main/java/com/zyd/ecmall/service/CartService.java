@@ -11,6 +11,8 @@ import com.zyd.ecmall.mapper.CartMapper;
 import com.zyd.ecmall.mapper.ProductMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -61,6 +63,7 @@ public class CartService {
         if (product == null) {
             throw new ProductNotFoundException(request.getProductId());
         }
+        validateQuantity(product, request.getQuantity());
 
         // 2. カート取得（なければ作成）
         Cart cart = getOrCreateCart(memberId);
@@ -71,6 +74,7 @@ public class CartService {
         if (existingItem != null) {
             // あるなら数量を加算（更新）
             int newQuantity = existingItem.getQuantity() + request.getQuantity();
+            validateQuantity(product, newQuantity);
             cartItemMapper.updateQuantity(existingItem.getId(), newQuantity);
         } else {
             // なければ新規挿入（その時点の商品価格をスナップショットとして保存）
@@ -88,6 +92,9 @@ public class CartService {
      */
     @Transactional
     public void updateItemQuantity(Long memberId, Long productId, Integer quantity) {
+        Product product = productMapper.selectById(productId);
+        if (product == null) throw new ProductNotFoundException(productId);
+        validateQuantity(product, quantity);
         Cart cart = getOrCreateCart(memberId);
         CartItem item = cartItemMapper.selectByCartIdAndProductId(cart.getId(), productId);
         if (item == null) {
@@ -118,6 +125,17 @@ public class CartService {
     }
 
     // ---- プライベートヘルパーメソッド ----
+    private void validateQuantity(Product product, Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "数量は1以上で入力してください。");
+        }
+        if (!Integer.valueOf(1).equals(product.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "この商品は現在販売していません。");
+        }
+        if (product.getStock() < quantity) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "在庫が不足しています。");
+        }
+    }
     private Cart getOrCreateCart(Long memberId) {
         Cart cart = cartMapper.selectByMemberId(memberId);
         if (cart == null) {
