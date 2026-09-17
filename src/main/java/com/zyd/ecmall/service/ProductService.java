@@ -55,7 +55,7 @@ public class ProductService {
     public Product updateProduct(Long id, ProductUpdateRequest request) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("商品不存在，ID：" + id);
+            throw new ProductNotFoundException(id);
         }
 
         // 只更新传入的非空字段
@@ -75,7 +75,7 @@ public class ProductService {
     public boolean deleteProduct(Long id) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("商品不存在，ID：" + id);
+            throw new ProductNotFoundException(id);
         }
         return productMapper.deleteById(id) > 0;
     }
@@ -116,6 +116,10 @@ public class ProductService {
 
     @Transactional
     public Product updateStatus(Long id, Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "公開状態が正しくありません");
+        }
         Product product = productMapper.selectById(id);
         if (product == null) {
             throw new RuntimeException("商品が見つかりません。ID: " + id);
@@ -127,6 +131,10 @@ public class ProductService {
     
     @Transactional
     public Product updateStock(Long id, Integer stock) {
+        if (stock == null || stock < 0) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "在庫数は0以上で入力してください");
+        }
         Product product = productMapper.selectById(id);
         if (product == null) {
             throw new RuntimeException("商品が見つかりません。ID: " + id);

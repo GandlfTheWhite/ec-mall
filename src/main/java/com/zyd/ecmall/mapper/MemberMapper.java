@@ -47,7 +47,7 @@ public interface MemberMapper {
         SET name = #{name},
             email = #{email},
             age = #{age},
-            password_hash = #{passwordHash}
+            password_hash = COALESCE(#{passwordHash}, password_hash)
         WHERE id = #{id}
         """)
     int update(Member member);

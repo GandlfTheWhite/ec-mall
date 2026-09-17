@@ -1,15 +1,21 @@
 package com.zyd.ecmall.dto;
 
 import java.math.BigDecimal;
+import jakarta.validation.constraints.*;
 
 public class ProductUpdateRequest {
+    @Pattern(regexp = "(?s).*\\S.*", message = "商品名を入力してください")
     private String name;
     private String description;
+    @DecimalMin(value = "0.01", message = "価格は0.01以上で入力してください")
     private BigDecimal price;
+    @Min(value = 0, message = "在庫数は0以上で入力してください")
     private Integer stock;
     private String category;
     private String imageUrl;
-    private Integer status; // 允许上下架
+    @Min(0)
+    @Max(1)
+    private Integer status;
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

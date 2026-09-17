@@ -26,6 +26,11 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             HttpServletResponse response,
             Object handler) throws Exception {
 
+        // 会員登録だけはログイン前でも利用できる。
+        if (handler instanceof org.springframework.web.method.HandlerMethod method
+                && com.zyd.ecmall.controller.MemberController.class.isAssignableFrom(method.getBeanType())
+                && method.getMethod().getName().equals("create")) return true;
+
 //        // 🆕 如果是 GET 请求，直接放行（所有人都能浏览商品）
 //         if ("GET".equalsIgnoreCase(request.getMethod())) {
 //                return true;

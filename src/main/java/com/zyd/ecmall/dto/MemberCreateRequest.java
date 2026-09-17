@@ -9,6 +9,7 @@ public class MemberCreateRequest {
     @NotBlank(message = "メールアドレスは必須です")
     @Email(message = "メールアドレスの形式が正しくありません")
     private String email;
+    @NotNull(message = "年齢は必須です")
     @Min(value = 0, message = "年齢は0以上を入力してください")
     @Max(value = 150, message = "年齢は150以下で入力してください")
     private Integer age;

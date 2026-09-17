@@ -46,7 +46,7 @@ public class MemberController {
     @PutMapping("/{id}")
     public Member updateMember(
             @PathVariable Long id,
-            @RequestBody MemberUpdateRequest request) {
+            @Valid @RequestBody MemberUpdateRequest request) {
         return memberService.updateMember(id, request);
     }
 

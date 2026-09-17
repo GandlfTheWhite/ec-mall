@@ -7,6 +7,8 @@ import com.zyd.ecmall.service.MemberService;
 import com.zyd.ecmall.service.OrderService;
 import com.zyd.ecmall.service.ProductService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,7 +37,7 @@ public class AdminController {
     public ResponseEntity<Member> updateMemberRole(@PathVariable Long id, @RequestParam String role) {
         // role は "USER" または "ADMIN" のみ許可
         if (!"USER".equals(role) && !"ADMIN".equals(role)) {
-            throw new RuntimeException("無効なロールです。USER または ADMIN を指定してください。");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "無効な権限です。USER または ADMIN を指定してください。");
         }
         Member updated = memberService.updateRole(id, role);
         return ResponseEntity.ok(updated);

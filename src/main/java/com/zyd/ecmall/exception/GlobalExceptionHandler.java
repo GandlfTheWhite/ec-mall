@@ -64,8 +64,21 @@ public class GlobalExceptionHandler {
                 "message", e.getMessage()
         );
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
+    }
+
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(org.springframework.web.server.ResponseStatusException e) {
+        return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                "status", e.getStatusCode().value(),
+                "message", e.getReason() == null ? "処理に失敗しました" : e.getReason()));
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleRelatedData(org.springframework.dao.DataIntegrityViolationException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "status", 409, "message", "関連するデータが存在するか、登録済みの情報と重複しています。"));
     }
 
     @ExceptionHandler(ProductNotFoundException.class)

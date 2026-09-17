@@ -1,6 +1,7 @@
 package com.zyd.ecmall.interceptor;
 
 import com.zyd.ecmall.entity.Member;
+import com.zyd.ecmall.exception.MemberNotFoundException;
 import com.zyd.ecmall.security.JwtTokenProvider;
 import com.zyd.ecmall.service.MemberService;
 import io.jsonwebtoken.JwtException;
@@ -25,7 +26,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
         // 1. JWT を取得
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            writeErrorResponse(response, "認証が必要です");
+            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "認証が必要です");
             return false;
         }
 
@@ -39,16 +40,8 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             // 3. 会員情報を取得してロールをチェック
             Member member = memberService.getMemberById(memberId);
 
-//            // ===== 🆕 ここにデバッグログを追加（角色检查前） =====
-//            System.out.println("===== 管理者チェックデバッグ =====");
-//            System.out.println("memberId: " + memberId);
-//            System.out.println("role の値: [" + member.getRole() + "]");
-//            System.out.println("role の長さ: " + (member.getRole() == null ? "null" : member.getRole().length()));
-//            System.out.println("'ADMIN' と一致するか: " + "ADMIN".equals(member.getRole()));
-//            System.out.println("=================================");
-
             if (!"ADMIN".equals(member.getRole())) {
-                writeErrorResponse(response, "管理者権限がありません");
+                writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "管理者権限がありません");
                 return false;
             }
 
@@ -56,17 +49,17 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             request.setAttribute("adminId", memberId);
             return true;
 
-        } catch (JwtException e) {
-            writeErrorResponse(response, "無効なトークンです");
+        } catch (JwtException | IllegalArgumentException | MemberNotFoundException e) {
+            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "ログイン情報が無効です。再度ログインしてください。");
             return false;
         }
 
     }
 
-    private void writeErrorResponse(HttpServletResponse response, String message) throws Exception {
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    private void writeErrorResponse(HttpServletResponse response, int status, String message) throws Exception {
+        response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"status\":403,\"message\":\"" + message + "\"}");
+        response.getWriter().write("{\"status\":" + status + ",\"message\":\"" + message + "\"}");
     }
 }
