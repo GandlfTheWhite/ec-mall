@@ -1,9 +1,52 @@
-<template><main class="wrap"><h2>カート</h2><el-skeleton v-if="loading" :rows="6" animated /><el-empty v-else-if="!items.length" description="カートは空です"><el-button type="primary" @click="router.push('/products/search')">商品一覧へ</el-button></el-empty><template v-else><el-table :data="items"><el-table-column label="商品" min-width="240"><template #default="{row}"><div class="product"><el-image :src="row.imageUrl" class="thumb" fit="cover" /><span>{{ row.productName }}</span></div></template></el-table-column><el-table-column label="単価" width="130"><template #default="{row}">¥{{ money(row.priceAtAdd) }}</template></el-table-column><el-table-column label="数量" width="180"><template #default="{row}"><el-input-number v-model="row.quantity" :min="1" :max="99" @change="update(row)" /></template></el-table-column><el-table-column label="小計" width="130"><template #default="{row}">¥{{ money(row.priceAtAdd * row.quantity) }}</template></el-table-column><el-table-column label="操作" width="100"><template #default="{row}"><el-button link type="danger" @click="remove(row.productId)">削除</el-button></template></el-table-column></el-table><div class="footer"><strong>合計金額：¥{{ money(total) }}</strong><div><el-button @click="clear">カートを空にする</el-button><el-button type="primary" @click="router.push('/checkout')">注文へ進む</el-button></div></div></template></main></template>
+<template>
+  <main class="page-wrap">
+    <h1>カート</h1>
+    <el-skeleton v-if="loading" :rows="6" animated />
+    <el-result v-else-if="error" icon="error" title="カートを取得できません" :sub-title="error"><template #extra><el-button @click="load">再読み込み</el-button></template></el-result>
+    <el-empty v-else-if="!items.length" description="カートは空です"><el-button type="primary" @click="router.push('/products/search')">商品一覧へ</el-button></el-empty>
+    <template v-else>
+      <el-table :data="items" row-key="productId">
+        <el-table-column label="商品" min-width="200"><template #default="{ row }"><router-link :to="'/products/' + row.productId">{{ row.productName }}</router-link></template></el-table-column>
+        <el-table-column label="単価" width="150"><template #default="{ row }">¥{{ money(row.priceAtAdd) }}<small v-if="Number(row.priceAtAdd) !== Number(row.currentPrice)" class="muted">現在の価格：¥{{ money(row.currentPrice) }}</small></template></el-table-column>
+        <el-table-column label="数量" width="190"><template #default="{ row }"><el-input-number :model-value="row.quantity" :min="1" :precision="0" :disabled="busy" @change="(value) => update(row, value)" /></template></el-table-column>
+        <el-table-column label="小計" width="140"><template #default="{ row }">¥{{ money(row.priceAtAdd * row.quantity) }}</template></el-table-column>
+        <el-table-column label="操作" width="90"><template #default="{ row }"><el-button link type="danger" :disabled="busy" @click="remove(row)">削除</el-button></template></el-table-column>
+      </el-table>
+      <div class="page-heading footer">
+        <strong>合計金額：¥{{ money(cart.totalPrice) }}</strong>
+        <div class="actions"><el-button :disabled="busy" @click="clear">カートを空にする</el-button><el-button type="primary" :disabled="busy" @click="router.push('/checkout')">注文へ進む</el-button></div>
+      </div>
+    </template>
+  </main>
+</template>
 <script setup>
-import { computed,onMounted,ref } from 'vue';import { ElMessage,ElMessageBox } from 'element-plus';import { useRouter } from 'vue-router';import { getCart,updateCartItem,removeCartItem,clearCart } from '@/api/cart'
-const router=useRouter(),items=ref([]),loading=ref(false),total=computed(()=>items.value.reduce((s,i)=>s+Number(i.priceAtAdd)*i.quantity,0)),money=(v)=>Number(v).toFixed(2)
-const fetch=async()=>{loading.value=true;try{items.value=((await getCart()).data.items)||[]}catch(e){ElMessage.error(e.response?.data?.message||'カート情報の取得に失敗しました')}finally{loading.value=false}}
-const update=async(row)=>{try{await updateCartItem(row.productId,row.quantity);await fetch()}catch(e){ElMessage.error(e.response?.data?.message||'数量を更新できませんでした');await fetch()}}
-const remove=async(id)=>{try{await ElMessageBox.confirm('この商品をカートから削除しますか？','確認',{type:'warning'});await removeCartItem(id);ElMessage.success('削除しました');fetch()}catch(e){if(e!=='cancel')ElMessage.error('削除に失敗しました')}}
-const clear=async()=>{try{await ElMessageBox.confirm('カート内の商品をすべて削除しますか？','確認',{type:'warning'});await clearCart();ElMessage.success('カートを空にしました');fetch()}catch(e){if(e!=='cancel')ElMessage.error('処理に失敗しました')}};onMounted(fetch)
-</script><style scoped>.wrap{max-width:1100px;margin:auto;padding:24px}.product{display:flex;align-items:center;gap:12px}.thumb{width:48px;height:48px;background:#f4f4f5}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;font-size:18px}</style>
+import { computed, onMounted, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { getCart, updateCartItem, removeCartItem, clearCart } from '@/api/cart'
+import { useResource } from '@/composables/useResource'
+import { money, errorMessage, isCancelled, confirmOptions } from '@/utils/display'
+const router = useRouter()
+const { data: cart, loading, error, load } = useResource(getCart)
+const items = computed(() => cart.value?.items || [])
+const busy = ref(false)
+async function mutate(operation, confirmation) {
+  if (busy.value) return
+  busy.value = true
+  try {
+    if (confirmation) await ElMessageBox.confirm(confirmation, '確認', confirmOptions)
+    await operation()
+    await load()
+  } catch (e) { if (!isCancelled(e)) { ElMessage.error(errorMessage(e)); await load() } }
+  finally { busy.value = false }
+}
+function update(row, quantity) {
+  if (quantity === row.quantity) return
+  if (!Number.isInteger(quantity) || quantity < 1) { ElMessage.warning('数量は1以上の整数で入力してください。'); return load() }
+  return mutate(() => updateCartItem(row.productId, quantity))
+}
+const remove = (row) => mutate(() => removeCartItem(row.productId), 'この商品をカートから削除しますか？')
+const clear = () => mutate(clearCart, 'カート内の商品をすべて削除しますか？')
+onMounted(load)
+</script>
+<style scoped>.footer { margin-top: 24px; } small { display: block; margin-top: 6px; }</style>
