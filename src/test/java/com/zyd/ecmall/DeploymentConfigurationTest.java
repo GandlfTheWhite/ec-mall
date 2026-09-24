@@ -29,32 +29,33 @@ class DeploymentConfigurationTest {
     @Test
     void productionUsesExistingRdsEnvironmentVariableNames() {
         runner.withPropertyValues(
-                "spring.profiles.active=local",
-                "LOCAL_DB_USERNAME=local-user",
-                "LOCAL_DB_PASSWORD=local-password",
-                "JWT_SECRET=local-key",
-                "RDS_HOSTNAME=database.example.invalid"
+                "spring.profiles.active=prod",
+                "RDS_HOSTNAME=database.example.invalid",
+                "RDS_DB_NAME=ec_mall",
+                "RDS_USERNAME=production-user",
+                "RDS_PASSWORD=production-password",
+                "JWT_SECRET=production-key"
         ).run(context -> {
             var env = context.getEnvironment();
-            assertTrue(env.getRequiredProperty("spring.datasource.url").startsWith("jdbc:mysql://192.168.56.11:3306/ec_mall?"));
-            assertEquals("local-user", env.getProperty("spring.datasource.username"));  // 这行现在能通过了
-            assertEquals("local-password", env.getProperty("spring.datasource.password"));
-            assertEquals("local-key", env.getProperty("jwt.secret"));
-            assertEquals("8888", env.getProperty("server.port"));
+            assertTrue(env.getRequiredProperty("spring.datasource.url").startsWith("jdbc:mysql://database.example.invalid:3306/ec_mall?"));
+            assertEquals("production-user", env.getProperty("spring.datasource.username"));
+            assertEquals("production-password", env.getProperty("spring.datasource.password"));
+            assertEquals("production-key", env.getProperty("jwt.secret"));
+            assertEquals("5000", env.getProperty("server.port"));
         });
     }
 
     @Test
     void localProfileUsesSeparateVariablesAndDevProxyPort() {
         runner.withPropertyValues(
-                "spring.profiles.active=local", "LOCAL_DB_PASSWORD=local-password",
-                "LOCAL_JWT_SECRET=local-key", "RDS_HOSTNAME=database.example.invalid",
-                "RDS_USERNAME=production-user", "RDS_PASSWORD=production-password",
-                "JWT_SECRET=production-key"
+                "spring.profiles.active=local", "LOCAL_DB_USERNAME=local-user",
+                "LOCAL_DB_PASSWORD=local-password",
+                "JWT_SECRET=local-key", "RDS_HOSTNAME=database.example.invalid",
+                "RDS_USERNAME=production-user", "RDS_PASSWORD=production-password"
         ).run(context -> {
             var env = context.getEnvironment();
             assertTrue(env.getRequiredProperty("spring.datasource.url").startsWith("jdbc:mysql://192.168.56.11:3306/ec_mall?"));
-            assertEquals("root", env.getProperty("spring.datasource.username"));
+            assertEquals("local-user", env.getProperty("spring.datasource.username"));
             assertEquals("local-password", env.getProperty("spring.datasource.password"));
             assertEquals("local-key", env.getProperty("jwt.secret"));
             assertEquals("8888", env.getProperty("server.port"));
@@ -65,6 +66,7 @@ class DeploymentConfigurationTest {
     void localSecretsHaveNoCommittedDefaults() {
         runner.withPropertyValues("spring.profiles.active=local").run(context -> {
             var env = context.getEnvironment();
+            assertThrows(IllegalArgumentException.class, () -> env.getRequiredProperty("spring.datasource.username"));
             assertThrows(IllegalArgumentException.class, () -> env.getRequiredProperty("spring.datasource.password"));
             assertThrows(IllegalArgumentException.class, () -> env.getRequiredProperty("jwt.secret"));
         });
