@@ -5,3 +5,8 @@ export const getAllOrders = () => api.get('/admin/orders')
 export const updateOrderStatus = (id, status) => api.put(`/admin/orders/${id}/status`, null, { params: { status } })
 export const updateProductStatus = (id, status) => api.put(`/admin/products/${id}/status`, null, { params: { status } })
 export const updateProductStock = (id, stock) => api.put(`/admin/products/${id}/stock`, null, { params: { stock } })
+export const uploadProductImage = (file) => {
+  const data = new FormData()
+  data.append('file', file)
+  return api.post('/admin/product-images', data, { timeout: 30000 })
+}

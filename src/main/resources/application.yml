@@ -11,6 +11,17 @@ spring:
   profiles:
     # 指定なしでは本番設定を使い、ローカルDBには接続しない。
     default: prod
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+app:
+  images:
+    enabled: ${IMAGE_UPLOAD_ENABLED:false}
+    bucket: ${IMAGE_BUCKET:}
+    region: ${IMAGE_REGION:}
+    public-base-url: ${IMAGE_PUBLIC_BASE_URL:}
 
 jwt:
   secret: ${JWT_SECRET}

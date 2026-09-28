@@ -87,5 +87,12 @@ public class GlobalExceptionHandler {
                 .body(Map.of("status", 404, "message", e.getMessage()));
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleImageTooLarge(
+            org.springframework.web.multipart.MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of(
+                "status", 413, "message", "画像は5MB以下にしてください。"));
+    }
+
 
 }

@@ -6,6 +6,7 @@ import com.zyd.ecmall.controller.AdminController;
 import com.zyd.ecmall.controller.AuthController;
 import com.zyd.ecmall.controller.CartController;
 import com.zyd.ecmall.controller.OrderController;
+import com.zyd.ecmall.controller.ProductImageController;
 import com.zyd.ecmall.config.WebConfig;
 import com.zyd.ecmall.entity.Member;
 import com.zyd.ecmall.exception.GlobalExceptionHandler;
@@ -18,6 +19,7 @@ import com.zyd.ecmall.service.MemberService;
 import com.zyd.ecmall.service.ProductService;
 import com.zyd.ecmall.service.OrderService;
 import com.zyd.ecmall.service.CartService;
+import com.zyd.ecmall.service.ProductImageStorage;
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,13 +48,14 @@ class ApiAccessTest {
     @Import({ WebConfig.class, JwtAuthInterceptor.class, ResourceAccessInterceptor.class,
             AdminAuthInterceptor.class, MemberController.class, ProductController.class,
             AdminController.class, AuthController.class, CartController.class,
-            OrderController.class, GlobalExceptionHandler.class })
+            OrderController.class, ProductImageController.class, GlobalExceptionHandler.class })
     static class TestConfig {
         @Bean MemberService members() { return mock(MemberService.class); }
         @Bean ProductService products() { return mock(ProductService.class); }
         @Bean OrderService orders() { return mock(OrderService.class); }
         @Bean CartService cart() { return mock(CartService.class); }
         @Bean JwtTokenProvider tokens() { return mock(JwtTokenProvider.class); }
+        @Bean ProductImageStorage imageStorage() { return mock(ProductImageStorage.class); }
     }
 
     @BeforeEach
@@ -93,6 +96,25 @@ class ApiAccessTest {
         mvc.perform(get("/api/members")).andExpect(status().isUnauthorized());
         verify(members).createMember(any());
         verify(members, never()).getAllMembers();
+    }
+
+    @Test
+    void onlyAdministratorCanUploadProductImages() throws Exception {
+        var file = new org.springframework.mock.web.MockMultipartFile(
+                "file", "photo.png", "image/png", new byte[] {1, 2, 3});
+        mvc.perform(multipart("/api/admin/product-images").file(file))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(multipart("/api/admin/product-images").file(file)
+                .header("Authorization", "Bearer user-token"))
+                .andExpect(status().isForbidden());
+        var images = context.getBean(ProductImageStorage.class);
+        verifyNoInteractions(images);
+        when(images.upload(any())).thenReturn("https://media.example.com/products/a.png");
+        mvc.perform(multipart("/api/admin/product-images").file(file)
+                .header("Authorization", "Bearer admin-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.imageUrl").value("https://media.example.com/products/a.png"));
+        verify(images).upload(any());
     }
 
     @Test
