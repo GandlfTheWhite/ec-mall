@@ -104,8 +104,3 @@ AWS と GitHub の管理設定は今回変更していない。コミット・pu
 公開済みの設定や認証情報の過去履歴を削除・無効化する作業も別途必要。
 `aws/` は誤コミット防止のため除外したが、既に公開してしまった鍵を無効化する効果はない。
 
-## 参考資料
-
-- [Spring Boot の外部設定](https://docs.spring.io/spring-boot/reference/features/external-config.html)
-- [Spring Boot のプロファイル](https://docs.spring.io/spring-boot/reference/features/profiles.html)
-- [AWS EB の環境プロパティ](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/environments-cfg-softwaresettings.html)
