@@ -186,6 +186,29 @@ test('member form retains input during saving and admin dialog resets only on op
   admin.unmount()
 })
 
+test('product image uploads before saving and its URL is stored with the product', async () => {
+  const calls = []
+  handler = (config) => {
+    calls.push(config)
+    if (config.url === '/products') return config.method === 'get' ? [] : { id: 5 }
+    if (config.url === '/admin/product-images') return { imageUrl: 'https://media.example.com/products/photo.png' }
+    return null
+  }
+  const view = await mountView('views/admin/Products.vue', '/admin/products')
+  await view.bindings.open()
+  view.bindings.formRef.value = { validate: async () => true, clearValidate() {} }
+  const file = new Blob(['image bytes'], { type: 'image/png' })
+  view.bindings.selectImage({ target: { files: [file], value: 'photo.png' } })
+  view.bindings.form.name = '画像付き商品'
+  await view.bindings.save()
+  const uploadIndex = calls.findIndex((c) => c.url === '/admin/product-images')
+  const createIndex = calls.findIndex((c) => c.url === '/products' && c.method === 'post')
+  assert.ok(uploadIndex >= 0 && createIndex > uploadIndex)
+  assert.equal(calls[uploadIndex].data.get('file').type, 'image/png')
+  assert.equal(JSON.parse(calls[createIndex].data).imageUrl, 'https://media.example.com/products/photo.png')
+  view.unmount()
+})
+
 test('catalog ignores a delayed response from an older search', async () => {
   let firstResponse
   handler = (config) => config.params.keyword === '新着'

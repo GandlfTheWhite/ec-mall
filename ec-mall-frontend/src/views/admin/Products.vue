@@ -25,7 +25,12 @@
         <el-form-item label="価格" prop="price"><el-input-number v-model="form.price" :min="0.01" :precision="2" /></el-form-item>
         <el-form-item label="在庫数" prop="stock"><el-input-number v-model="form.stock" :min="0" :precision="0" /></el-form-item>
         <el-form-item label="カテゴリ"><el-input v-model.trim="form.category" /></el-form-item>
-        <el-form-item label="画像URL" prop="imageUrl"><el-input v-model.trim="form.imageUrl" placeholder="https://…" /></el-form-item>
+        <el-form-item label="商品画像">
+          <input type="file" accept="image/jpeg,image/png,image/webp" :disabled="saving" aria-label="商品画像を選択" @change="selectImage" />
+          <p class="image-hint">JPEG・PNG・WebP、5MB以下。保存時にアップロードします。</p>
+          <img v-if="imagePreview || form.imageUrl" class="image-preview" :src="imagePreview || form.imageUrl" alt="商品画像のプレビュー" />
+        </el-form-item>
+        <el-form-item label="画像URL（既存のURLも使用できます）" prop="imageUrl"><el-input v-model.trim="form.imageUrl" placeholder="https://…" /></el-form-item>
         <el-button native-type="submit" type="primary" :loading="saving">保存する</el-button>
       </el-form>
     </el-dialog>
@@ -37,10 +42,10 @@
   </main>
 </template>
 <script setup>
-import { nextTick, onMounted, reactive, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct } from '@/api/product'
-import { updateProductStatus, updateProductStock } from '@/api/admin'
+import { updateProductStatus, updateProductStock, uploadProductImage } from '@/api/admin'
 import { money, errorMessage, isCancelled, confirmOptions } from '@/utils/display'
 const products = ref([])
 const loading = ref(true)
@@ -50,6 +55,27 @@ const editing = ref(false)
 const saving = ref(false)
 const productId = ref(null)
 const formRef = ref()
+const imageFile = ref(null)
+const imagePreview = ref('')
+const maxImageBytes = 5 * 1024 * 1024
+const imageTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
+function clearImageSelection() {
+  imageFile.value = null
+  if (imagePreview.value) URL.revokeObjectURL(imagePreview.value)
+  imagePreview.value = ''
+}
+function selectImage(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (!imageTypes.has(file.type) || file.size === 0 || file.size > maxImageBytes) {
+    ElMessage.warning('JPEG・PNG・WebP形式の5MB以下の画像を選択してください。')
+    return
+  }
+  clearImageSelection()
+  imageFile.value = file
+  imagePreview.value = URL.createObjectURL(file)
+}
 const blank = () => ({ name: '', description: '', price: 0.01, stock: 0, category: '', imageUrl: '' })
 const form = reactive(blank())
 const stockDialog = ref(false)
@@ -72,6 +98,7 @@ async function open(product) {
   busy.value = true
   try {
     const data = product ? (await getProductById(product.id)).data : blank()
+    clearImageSelection()
     productId.value = product?.id || null
     Object.assign(form, blank(), Object.fromEntries(Object.keys(blank()).map((key) => [key, data[key] ?? blank()[key]])))
     editing.value = true
@@ -85,9 +112,15 @@ async function save() {
   saving.value = true
   if (!await formRef.value.validate().catch(() => false)) { saving.value = false; return }
   try {
+    if (imageFile.value) {
+      const { data } = await uploadProductImage(imageFile.value)
+      form.imageUrl = data.imageUrl
+      clearImageSelection()
+    }
     if (productId.value) await updateProduct(productId.value, { ...form })
     else await createProduct({ ...form })
     editing.value = false
+    clearImageSelection()
     ElMessage.success('商品を保存しました。')
     await load()
   } catch (e) { ElMessage.error(errorMessage(e)) }
@@ -120,4 +153,9 @@ async function saveStock() {
   finally { saving.value = false }
 }
 onMounted(load)
+onBeforeUnmount(clearImageSelection)
 </script>
+<style scoped>
+.image-hint { margin: 4px 0; color: #909399; font-size: 12px; }
+.image-preview { display: block; width: 160px; height: 120px; object-fit: contain; margin-top: 8px; background: #f4f4f5; }
+</style>
