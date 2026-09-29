@@ -6,6 +6,8 @@ on:
     paths:
       - 'src/**'
       - 'pom.xml'
+      - 'Procfile'
+      - '.platform/**'
       - '.github/workflows/deploy-backend.yml'
       - '.github/scripts/**'
   pull_request:
@@ -13,6 +15,8 @@ on:
     paths:
       - 'src/**'
       - 'pom.xml'
+      - 'Procfile'
+      - '.platform/**'
       - '.github/workflows/deploy-backend.yml'
       - '.github/scripts/**'
   workflow_dispatch:
@@ -38,10 +42,12 @@ jobs:
         run: python3 -B -m unittest discover -s .github/scripts -p 'test_*.py'
       - name: Test and package without a live database
         run: mvn --batch-mode verify
+      - name: Package EB application and upload limit configuration
+        run: python3 .github/scripts/package_backend.py
       - uses: actions/upload-artifact@v4
         with:
-          name: backend-jar
-          path: target/ec-mall-1.0-SNAPSHOT.jar
+          name: backend-bundle
+          path: target/ec-mall-eb.zip
           if-no-files-found: error
 
   deploy:
@@ -57,7 +63,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: backend-jar
+          name: backend-bundle
           path: target
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -87,4 +93,4 @@ jobs:
           environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
           region: ${{ secrets.AWS_REGION }}
           version_label: "v-${{ github.sha }}"
-          deployment_package: target/ec-mall-1.0-SNAPSHOT.jar
+          deployment_package: target/ec-mall-eb.zip

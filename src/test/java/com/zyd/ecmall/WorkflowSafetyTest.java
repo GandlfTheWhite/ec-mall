@@ -39,7 +39,12 @@ class WorkflowSafetyTest {
             List<?> steps = (List<?>) deploy.get("steps");
             String beforeDeployment = steps.get(steps.size() - 2).toString();
             assertTrue(beforeDeployment.contains("check_eb_environment.py"));
-            assertTrue(steps.get(steps.size() - 1).toString().contains("target/ec-mall-1.0-SNAPSHOT.jar"));
+            assertTrue(steps.get(steps.size() - 1).toString().contains("target/ec-mall-eb.zip"));
+            assertTrue(verify.contains("package_backend.py"));
+            assertTrue(verify.contains("backend-bundle"));
+            assertTrue(verify.contains("target/ec-mall-eb.zip"));
+            assertTrue(Files.readString(Path.of(".platform/nginx/conf.d/20_upload_size.conf")).contains("client_max_body_size 6m;"));
+            assertEquals("web: java -jar application.jar", Files.readString(Path.of("Procfile")).trim());
         }
     }
 }

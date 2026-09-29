@@ -1,6 +1,9 @@
 package com.zyd.ecmall;
 
 import com.zyd.ecmall.controller.MemberController;
+import com.zyd.ecmall.controller.ProductImageController;
+import com.zyd.ecmall.service.ProductImageService;
+import org.springframework.mock.web.MockMultipartFile;
 import com.zyd.ecmall.controller.ProductController;
 import com.zyd.ecmall.controller.AdminController;
 import com.zyd.ecmall.controller.AuthController;
@@ -46,8 +49,9 @@ class ApiAccessTest {
     @Import({ WebConfig.class, JwtAuthInterceptor.class, ResourceAccessInterceptor.class,
             AdminAuthInterceptor.class, MemberController.class, ProductController.class,
             AdminController.class, AuthController.class, CartController.class,
-            OrderController.class, GlobalExceptionHandler.class })
+            OrderController.class, ProductImageController.class, GlobalExceptionHandler.class })
     static class TestConfig {
+        @Bean ProductImageService images() { return mock(ProductImageService.class); }
         @Bean MemberService members() { return mock(MemberService.class); }
         @Bean ProductService products() { return mock(ProductService.class); }
         @Bean OrderService orders() { return mock(OrderService.class); }
@@ -165,5 +169,33 @@ class ApiAccessTest {
                 .header("Authorization", "Bearer admin-token"))
                 .andExpect(status().isBadRequest());
         verify(members, never()).updateRole(anyLong(), anyString());
+    }
+
+    @Test
+    void imageUploadRequiresValidAdministratorBeforeInvokingService() throws Exception {
+        var imageService = context.getBean(ProductImageService.class);
+        var file = new MockMultipartFile("file", "photo.png", "image/png", new byte[]{1});
+        mvc.perform(multipart("/api/admin/product-images").file(file)).andExpect(status().isUnauthorized());
+        for (String token : new String[]{"expired-token", "deleted-token"}) {
+            mvc.perform(multipart("/api/admin/product-images").file(file).header("Authorization", "Bearer " + token))
+                    .andExpect(status().isUnauthorized());
+        }
+        mvc.perform(multipart("/api/admin/product-images").file(file).header("Authorization", "Bearer user-token"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(imageService);
+        when(imageService.upload(any())).thenReturn(new ProductImageService.UploadResult("https://images.example.com/products/a.png", "products/a.png"));
+        mvc.perform(multipart("/api/admin/product-images").file(file).header("Authorization", "Bearer admin-token"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.imageUrl").value("https://images.example.com/products/a.png"));
+        verify(imageService).upload(any());
+    }
+
+    @Test
+    void missingImageAndContainerSizeErrorsHaveJapaneseResponses() throws Exception {
+        mvc.perform(multipart("/api/admin/product-images").header("Authorization", "Bearer admin-token"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value("画像ファイルを選択してください。"));
+        when(context.getBean(ProductImageService.class).upload(any()))
+                .thenThrow(new org.springframework.web.multipart.MaxUploadSizeExceededException(5 * 1024 * 1024));
+        mvc.perform(multipart("/api/admin/product-images").file(new MockMultipartFile("file", new byte[]{1}))
+                .header("Authorization", "Bearer admin-token")).andExpect(status().isPayloadTooLarge());
     }
 }

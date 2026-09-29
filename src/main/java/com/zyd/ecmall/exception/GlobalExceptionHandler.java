@@ -11,6 +11,18 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadTooLarge(Exception e) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(Map.of("status", 413, "message", "画像は5 MB以下、リクエスト全体は6 MB以下にしてください。"));
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingUploadPart(Exception e) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("status", 400, "message", "画像ファイルを選択してください。"));
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(

@@ -264,3 +264,97 @@ test('administrator mutations use the backend parameter contracts', async () => 
     ['put', '/admin/orders/8/status', { status: 2 }],
   ])
 })
+
+test('image upload validates size and type before sending a request', async () => {
+  const images = await moduleAt('api/productImage.js')
+  for (const type of ['image/jpeg', 'image/png', 'image/webp']) {
+    assert.equal(images.imageFileError({ size: 5 * 1024 * 1024, type }), '')
+  }
+  assert.ok(images.imageFileError({ size: 0, type: 'image/png' }))
+  assert.ok(images.imageFileError({ size: 5 * 1024 * 1024 + 1, type: 'image/png' }))
+  assert.ok(images.imageFileError({ size: 10, type: 'image/svg+xml' }))
+  handler = () => []
+  const view = await mountView('views/admin/Products.vue', '/admin/products')
+  await view.bindings.open()
+  let calls = 0
+  handler = () => { calls++; return {} }
+  await view.bindings.uploadImage(new File(['<svg/>'], 'fake.png', { type: 'image/svg+xml' }))
+  assert.equal(calls, 0)
+  assert.equal(view.bindings.uploading.value, false)
+  view.unmount()
+})
+
+test('image API sends authenticated multipart file with a bounded upload timeout', async () => {
+  const images = await moduleAt('api/productImage.js')
+  localStorage.setItem('token', validToken)
+  let sent
+  handler = (config) => { sent = config; return { imageUrl: 'https://images.example.com/products/a.png' } }
+  const file = new File(['test'], 'photo.png', { type: 'image/png' })
+  const controller = new AbortController()
+  await images.uploadProductImage(file, controller.signal)
+  assert.equal(sent.url, '/admin/product-images')
+  assert.equal(sent.method, 'post')
+  assert.ok(sent.data instanceof FormData)
+  assert.equal(sent.data.get('file').name, 'photo.png')
+  assert.equal(sent.headers.Authorization, 'Bearer ' + validToken)
+  assert.equal(sent.timeout, 45000)
+  assert.equal(sent.signal, controller.signal)
+})
+
+test('uploaded URL is saved only when the administrator saves the product', async () => {
+  const calls = []
+  const imageUrl = 'https://images.example.com/products/new.png'
+  handler = (config) => { calls.push(config); return config.url === '/admin/product-images' ? { imageUrl } : [] }
+  const view = await mountView('views/admin/Products.vue', '/admin/products')
+  const b = view.bindings
+  await b.open()
+  Object.assign(b.form, { name: '画像付き商品', price: 100, stock: 3 })
+  b.formRef.value = { validate: async () => true, clearValidate() {} }
+  await b.uploadImage(new File(['test'], 'photo.png', { type: 'image/png' }))
+  assert.equal(b.form.imageUrl, imageUrl)
+  assert.equal(b.form.name, '画像付き商品')
+  assert.equal(calls.filter((c) => c.method === 'post' && c.url === '/products').length, 0)
+  await b.save()
+  const saved = calls.find((c) => c.method === 'post' && c.url === '/products')
+  assert.equal(JSON.parse(saved.data).imageUrl, imageUrl)
+  assert.equal(b.editing.value, false)
+  view.unmount()
+})
+
+test('failed image upload preserves the previous URL and allows retry', async () => {
+  handler = () => []
+  const view = await mountView('views/admin/Products.vue', '/admin/products')
+  await view.bindings.open()
+  view.bindings.form.imageUrl = 'https://images.example.com/products/old.png'
+  handler = () => { throw { response: { status: 502, data: { message: '画像の保存に失敗しました。' } } } }
+  const file = new File(['test'], 'photo.png', { type: 'image/png' })
+  await view.bindings.uploadImage(file)
+  assert.equal(view.bindings.form.imageUrl, 'https://images.example.com/products/old.png')
+  assert.equal(view.bindings.uploading.value, false)
+  handler = () => ({ imageUrl: 'https://images.example.com/products/retry.png' })
+  await view.bindings.uploadImage(file)
+  assert.equal(view.bindings.form.imageUrl, 'https://images.example.com/products/retry.png')
+  view.unmount()
+})
+
+test('pending upload prevents duplicate upload and premature save; unmount ignores the response', async () => {
+  handler = () => []
+  const view = await mountView('views/admin/Products.vue', '/admin/products')
+  await view.bindings.open()
+  view.bindings.form.imageUrl = 'https://images.example.com/products/old.png'
+  let finish, sent, calls = 0
+  handler = (config) => { calls++; sent = config; return new Promise((resolve) => { finish = resolve }) }
+  const file = new File(['test'], 'photo.png', { type: 'image/png' })
+  const pending = view.bindings.uploadImage(file)
+  await settle()
+  assert.equal(view.bindings.uploading.value, true)
+  await view.bindings.uploadImage(file)
+  await view.bindings.save()
+  await view.bindings.open({ id: 9 })
+  assert.equal(calls, 1)
+  view.unmount()
+  assert.equal(sent.signal.aborted, true)
+  finish({ imageUrl: 'https://images.example.com/products/stale.png' })
+  await pending
+  assert.equal(view.bindings.form.imageUrl, 'https://images.example.com/products/old.png')
+})

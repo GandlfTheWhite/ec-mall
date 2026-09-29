@@ -52,6 +52,26 @@ class EnvironmentCheckTest(unittest.TestCase):
         self.assertTrue(validate([]))
         self.assertTrue(validate([None]))
 
+    def test_image_upload_configuration_requires_separate_bucket_and_https_origin(self):
+        settings = {
+            "PRODUCT_IMAGES_ENABLED": "true", "PRODUCT_IMAGES_BUCKET": "product-images-test",
+            "PRODUCT_IMAGES_REGION": "us-east-1", "PRODUCT_IMAGES_BASE_URL": "https://images.example.com",
+            "FRONTEND_S3_BUCKET": "frontend-test",
+        }
+        self.assertEqual([], validate(self.options(**settings)))
+        for override in ({"PRODUCT_IMAGES_BUCKET": "frontend-test"}, {"PRODUCT_IMAGES_REGION": ""},
+                         {"FRONTEND_S3_BUCKET": ""}, {"PRODUCT_IMAGES_BASE_URL": "http://images.example.com"},
+                         {"PRODUCT_IMAGES_BASE_URL": "https://images.example.com?secret=test"},
+                         {"PRODUCT_IMAGES_BASE_URL": "https://user:password@images.example.com"},
+                         {"PRODUCT_IMAGES_BASE_URL": "https://images.example.com/path"}):
+            with self.subTest(override=list(override)):
+                self.assertTrue(validate(self.options(**(settings | override))))
+
+    def test_image_upload_is_disabled_by_default_but_missing_enabled_settings_fail(self):
+        self.assertEqual([], validate(self.options(PRODUCT_IMAGES_ENABLED="false")))
+        self.assertTrue(validate(self.options(PRODUCT_IMAGES_ENABLED="true")))
+        self.assertTrue(validate(self.options(PRODUCT_IMAGES_ENABLED="not-a-boolean")))
+
 
 if __name__ == "__main__":
     unittest.main()

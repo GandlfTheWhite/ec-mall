@@ -8,6 +8,10 @@ server:
         same-site: lax
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   profiles:
     # 指定なしでは本番設定を使い、ローカルDBには接続しない。
     default: prod
@@ -19,3 +23,12 @@ jwt:
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
+
+# 商品画像はフロントエンド配信用バケットと分離する。
+app:
+  product-images:
+    enabled: ${PRODUCT_IMAGES_ENABLED:false}
+    bucket: ${PRODUCT_IMAGES_BUCKET:}
+    region: ${PRODUCT_IMAGES_REGION:}
+    public-base-url: ${PRODUCT_IMAGES_BASE_URL:}
+    frontend-bucket: ${FRONTEND_S3_BUCKET:}

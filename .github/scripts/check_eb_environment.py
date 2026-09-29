@@ -4,7 +4,9 @@ import base64
 import binascii
 import ipaddress
 import json
+import re
 import sys
+from urllib.parse import urlsplit
 
 
 ENV_NAMESPACE = "aws:elasticbeanstalk:application:environment"
@@ -70,6 +72,34 @@ def validate(options):
                 errors.append("JWT_SECRET は32バイト以上の鍵を Base64 にした値が必要です。")
         except (ValueError, binascii.Error):
             errors.append("JWT_SECRET は正しい Base64 形式で設定してください。")
+    # 画像機能を有効にした場合だけ、配信前に専用バケットと公開URLを確認する。
+    enabled = values.get("PRODUCT_IMAGES_ENABLED", "false").strip().lower()
+    image_names = ("PRODUCT_IMAGES_ENABLED", "PRODUCT_IMAGES_BUCKET", "PRODUCT_IMAGES_REGION",
+                   "PRODUCT_IMAGES_BASE_URL", "FRONTEND_S3_BUCKET")
+    if secret_names.intersection(image_names):
+        errors.append("画像配信設定は秘密値ではなく通常の環境プロパティで設定してください。")
+    if enabled not in ("true", "false"):
+        errors.append("PRODUCT_IMAGES_ENABLED は true または false にしてください。")
+    if enabled == "true":
+        for name in image_names[1:]:
+            if not values.get(name, "").strip():
+                errors.append(name + " が未設定です。")
+        bucket = values.get("PRODUCT_IMAGES_BUCKET", "")
+        frontend = values.get("FRONTEND_S3_BUCKET", "")
+        if not re.fullmatch(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]", bucket) or not re.fullmatch(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]", frontend):
+            errors.append("画像用とフロントエンド用のバケット名を確認してください。")
+        if bucket == frontend:
+            errors.append("商品画像にはフロントエンドと異なるS3バケットが必要です。")
+        try:
+            base = values.get("PRODUCT_IMAGES_BASE_URL", "")
+            url = urlsplit(base)
+            if (url.scheme != "https" or not url.hostname or url.username is not None
+                    or url.password is not None or url.port not in (None, 443)
+                    or url.path not in ("", "/") or "?" in base or "#" in base
+                    or len(base.rstrip("/")) + 51 > 255):
+                raise ValueError()
+        except ValueError:
+            errors.append("PRODUCT_IMAGES_BASE_URL はパス・クエリのないHTTPSのURLにしてください。")
     return errors
 
 

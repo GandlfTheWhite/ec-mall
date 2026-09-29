@@ -16,6 +16,16 @@ class DeploymentConfigurationTest {
             .withInitializer(new ConfigDataApplicationContextInitializer());
 
     @Test
+    void imageUploadIsOptInAndMultipartLimitsAreApplied() {
+        runner.run(context -> {
+            var env = context.getEnvironment();
+            assertEquals("false", env.getProperty("app.product-images.enabled"));
+            assertEquals("5MB", env.getProperty("spring.servlet.multipart.max-file-size"));
+            assertEquals("6MB", env.getProperty("spring.servlet.multipart.max-request-size"));
+        });
+    }
+
+    @Test
     void defaultProfileIsProductionAndMissingHostDoesNotFallBackToLocalhost() {
         runner.run(context -> {
             var env = context.getEnvironment();
